@@ -1,7 +1,7 @@
 package relax.gaming;
 
 public enum SymbolType {
-    BLOCKER(100, 0),
+    BL(100, 0),
     H1(100, 100),
     H2(100, 100),
     H3(100, 100),
@@ -18,5 +18,13 @@ public enum SymbolType {
     SymbolType(int spinWeight, int avalancheWeight) {
         this.spinWeight = spinWeight;
         this.avalancheWeight = avalancheWeight;
+    }
+
+    public static boolean isIgnored(SymbolType type){
+        return (type.equals(SymbolType.BL));
+    }
+
+    public static boolean isWildCard(SymbolType type){
+        return (type.equals(SymbolType.WR));
     }
 }
