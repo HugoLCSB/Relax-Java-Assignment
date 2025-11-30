@@ -1,0 +1,7 @@
+[
+  { "name": "S", "start": 5, "end": 8 },
+  { "name": "M", "start": 9, "end": 12 },
+  { "name": "ML", "start": 13, "end": 16 },
+  { "name": "L", "start": 17, "end": 20 },
+  { "name": "XL", "start": 21, "end": 64 }
+]

@@ -16,6 +16,11 @@ import java.util.concurrent.CompletableFuture;
 
 public class HandleGambleAsync implements HttpHandler {
     private static final Logger LOGGER = LogManager.getLogger(HandleGambleAsync.class);
+    private final Engine engine;
+
+    public HandleGambleAsync(Engine engine) {
+        this.engine = engine;
+    }
 
     @Override
     public void handleRequest(HttpServerExchange exchange) {
@@ -29,7 +34,7 @@ public class HandleGambleAsync implements HttpHandler {
 
                 LOGGER.info("Received spin request");
 
-                CompletableFuture.supplyAsync(() -> Engine.doGamble(seed, bet), SingletonExecutor.REGULAR_REQUEST_POOL)
+                CompletableFuture.supplyAsync(() -> this.engine.doGamble(seed, bet), SingletonExecutor.REGULAR_REQUEST_POOL)
                         .thenAccept(result -> {
                             try {
                                 String json = Json.toJson(result);

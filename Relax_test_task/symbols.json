@@ -1,0 +1,72 @@
+[
+  {
+    "name": "H1",
+    "spinWeight": 100,
+    "avalancheWeight": 100,
+    "isWildCard": false,
+    "isBlocker": false
+  },
+  {
+    "name": "H2",
+    "spinWeight": 100,
+    "avalancheWeight": 100,
+    "isWildCard": false,
+    "isBlocker": false
+  },
+  {
+    "name": "H3",
+    "spinWeight": 100,
+    "avalancheWeight": 100,
+    "isWildCard": false,
+    "isBlocker": false
+  },
+  {
+    "name": "H4",
+    "spinWeight": 100,
+    "avalancheWeight": 100,
+    "isWildCard": false,
+    "isBlocker": false
+  },
+  {
+    "name": "L5",
+    "spinWeight": 100,
+    "avalancheWeight": 100,
+    "isWildCard": false,
+    "isBlocker": false
+  },
+  {
+    "name": "L6",
+    "spinWeight": 100,
+    "avalancheWeight": 100,
+    "isWildCard": false,
+    "isBlocker": false
+  },
+  {
+    "name": "L7",
+    "spinWeight": 100,
+    "avalancheWeight": 100,
+    "isWildCard": false,
+    "isBlocker": false
+  },
+  {
+    "name": "L8",
+    "spinWeight": 100,
+    "avalancheWeight": 100,
+    "isWildCard": false,
+    "isBlocker": false
+  },
+  {
+    "name": "WR",
+    "spinWeight": 100,
+    "avalancheWeight": 100,
+    "isWildCard": true,
+    "isBlocker": false
+  },
+  {
+    "name": "BL",
+    "spinWeight": 100,
+    "avalancheWeight": 0,
+    "isWildCard": false,
+    "isBlocker": true
+  }
+]

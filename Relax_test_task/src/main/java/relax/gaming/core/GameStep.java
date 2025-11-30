@@ -2,8 +2,7 @@ package relax.gaming.core;
 
 import org.apache.logging.log4j.LogManager;
 import relax.gaming.utils.Utils;
-import relax.gaming.config.ClusterBucket;
-import relax.gaming.config.SymbolType;
+import relax.gaming.config.Symbol;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -11,23 +10,28 @@ import java.util.List;
 import java.util.Set;
 import org.apache.logging.log4j.Logger;
 
+/**
+ * This class represents a GameStep, which is a single step in a GameRound.
+ * A GameStep is composed of one round of clusterSearch one round of destroying the found clusters
+ * and one round of applying gravity, to make up a single avalanche.
+ */
 public class GameStep {
     private static final Logger LOGGER = LogManager.getLogger(GameStep.class);
-    private final SymbolType[][] grid;
-    private final double bet;
+    private final Symbol[][] grid;
     private final List<Cluster> clusters;
-    private SymbolType[][] gridAfterDestroy;
-    private SymbolType[][] gridAfterGravity;
-    private double winAmount;
+    private Symbol[][] gridAfterDestroy;
+    private Symbol[][] gridAfterGravity;
+    private final int minClusterSize;
+    private double stepPayout;
 
-    public GameStep(SymbolType[][] grid, double bet) {
+    public GameStep(Symbol[][] grid, int minClusterSize) {
         this.grid = Utils.deepClone(grid);
-        this.bet = bet;
         this.clusters = new ArrayList<>();
-        this.winAmount = 0;
+        this.minClusterSize = minClusterSize;
+        this.stepPayout = 0;
     }
 
-    public SymbolType[][] getGrid(){
+    public Symbol[][] getGrid(){
         return this.grid;
     }
 
@@ -35,22 +39,29 @@ public class GameStep {
         return this.clusters;
     }
 
-    public SymbolType[][] getGridAfterDestroy(){
+    public Symbol[][] getGridAfterDestroy(){
         return this.gridAfterDestroy;
     }
 
-    public SymbolType[][] getGridAfterGravity(){
+    public Symbol[][] getGridAfterGravity(){
         return this.gridAfterGravity;
     }
 
     public double getStepPayout(){
-        return this.winAmount;
+        return this.stepPayout;
+    }
+
+    public void setStepPayout(double stepPayout){
+        this.stepPayout = stepPayout;
     }
 
     public boolean hasClusters(){
         return !this.clusters.isEmpty();
     }
 
+    /**
+     * Executes the GameStep.
+     */
     public void compute(){
         LOGGER.debug("Starting Grid: {}", Utils.formatGrid(this.grid));
         findClusters();
@@ -62,6 +73,11 @@ public class GameStep {
         }
     }
 
+    /**
+     * Finds clusters using a DFS approach where the 4 neighbors (up/down/left/right)
+     * are explored before backtracking, if same type found, recursively explore those
+     * neighbors and so on, until there are no same type neighbors or the grid is totally visited.
+     */
     private void findClusters(){
         boolean[][] visited = new boolean[this.grid.length][this.grid.length];
 
@@ -71,8 +87,8 @@ public class GameStep {
 
                 //ignored and wildcards don't form clusters
                 if(grid[i][j] == null
-                        || SymbolType.isIgnored(this.grid[i][j])
-                        || SymbolType.isWildCard(this.grid[i][j])){
+                        || this.grid[i][j].isBlocker()
+                        || this.grid[i][j].isWildCard()){
                     visited[i][j] = true;
                     continue;
                 }
@@ -84,20 +100,27 @@ public class GameStep {
         }
     }
 
+    /**
+     * Recursive search to find same type neighbors.
+     *
+     * @param i reel of the current position
+     * @param j row of the current position
+     * @param visited list of all visited positions
+     * @param cluster the current cluster being explored
+     */
     private void clusterSearch(int i, int j, boolean[][] visited, Cluster cluster){
-        if(!withinBounds(i,j)) {return;}
+        if(!withinBounds(i,j) || grid[i][j] == null) {return;}
 
-        SymbolType type = grid[i][j];
+        Symbol type = grid[i][j];
         Coord coord = new Coord(i, j);
-        boolean isWildCard = SymbolType.isWildCard(type);
 
-        //manually add ignored to the destroy list
-        if(SymbolType.isIgnored(type)){
+        //manually add blockers to the destroy list
+        if(type.isBlocker()){
             cluster.toDestroy().add(coord);
             return;
         }
 
-        if((!visited[i][j] || isWildCard) && cluster.addIfValid(type, coord,isWildCard)) {
+        if((!visited[i][j] || type.isWildCard()) && cluster.addIfValid(type, coord)) {
             visited[i][j] = true;
 
             clusterSearch(i-1, j, visited, cluster);
@@ -107,20 +130,34 @@ public class GameStep {
         }
     }
 
+    /**
+     * Check if position is within grid bounds
+     * @param i reel of the current position
+     * @param j row of the current position
+     * @return true if within the grid bounds
+     */
     private boolean withinBounds(int i, int j){
         return (i >= 0 && i < this.grid.length
                 && j >= 0 && j < this.grid[0].length);
     }
 
+    /**
+     * Adds new cluster to the GameStep found list if given
+     * cluster is of valid size.
+     * @param newCluster the cluster to be added
+     */
     private void processNewCluster(Cluster newCluster){
-        if(ClusterBucket.getBucket(newCluster.getSize()) != ClusterBucket.NONE){
-            this.winAmount += newCluster.calculateWin(this.bet);
+        if(newCluster.getSize() >= this.minClusterSize){
             this.clusters.add(newCluster);
-            LOGGER.debug("Found Cluster of {}, with size {}, payout {}€",
-                    newCluster.getType(), newCluster.getSize(), newCluster.getPayout());
+            LOGGER.debug("Found Cluster of {}, with size {}",
+                    newCluster.getType(), newCluster.getSize());
         }
     }
 
+    /**
+     * Generates a clone of the grid where the clusters
+     * previously found are destroyed
+     */
     private void destroyGrid(){
         this.gridAfterDestroy = Utils.deepClone(this.grid);
 
@@ -134,15 +171,19 @@ public class GameStep {
         }
     }
 
+    /**
+     * Generates a clone of the grid where positions that don't have a bottom
+     * neighbor that's not null will be moved down as if gravity was applied.
+     */
     private void applyGravity(){
         this.gridAfterGravity = Utils.deepClone(this.gridAfterDestroy);
-        SymbolType[] buffReel;
+        Symbol[] buffReel;
         int counter;
         for(int i = 0; i < this.gridAfterGravity.length; i++){
-            buffReel = new SymbolType[this.gridAfterGravity.length];
+            buffReel = new Symbol[this.gridAfterGravity.length];
             counter = this.gridAfterGravity.length-1;
             for(int j = this.gridAfterGravity.length-1; j >= 0; j--){
-                SymbolType curr = this.gridAfterGravity[i][j];
+                Symbol curr = this.gridAfterGravity[i][j];
                 if(curr != null){
                     buffReel[counter] = curr;
                     counter--;

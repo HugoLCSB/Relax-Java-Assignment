@@ -1,28 +1,30 @@
 package relax.gaming.core;
 
-import relax.gaming.config.SymbolType;
+import relax.gaming.config.Symbol;
 import relax.gaming.rnd.Rnd;
 import relax.gaming.utils.Utils;
+
+import java.util.List;
 
 public class GridGenerator {
     /**
      * Given an array of options and a same size array of cumulative weights
      * picks a random option according to said weights.
      *
-     * @param options array of options to pick from
-     * @param weights cumulative array of weights for each option
+     * @param options list of options to pick from
+     * @param weights cumulative list of weights for each option
      * @return the randomly chosen option
      * @param <T> the type of the option
      */
-    public static<T> T pick(Rnd rnd, T[] options, int[] weights){
+    public static<T> T pick(Rnd rnd, List<T> options, List<Integer> weights){
         //TODO: check arrays of same size
-        if(options.length == weights.length){
+        if(options.size() == weights.size()){
             //in a cumulative list the last entry is the total
-            int total = weights[weights.length-1];
+            int total = weights.get(weights.size()-1);
             int rand = rnd.nextInt(0, total);
-            for(int i = 0; i < options.length; i++){
-                if(rand <= weights[i]){
-                    return options[i];
+            for(int i = 0; i < options.size(); i++){
+                if(rand <= weights.get(i)){
+                    return options.get(i);
                 }
             }
         }
@@ -36,14 +38,15 @@ public class GridGenerator {
      * @param rnd the random number generator
      * @param reels number of reels
      * @param rows number of rows
+     * @param options list of options to pick from
      * @param weights the weights used for the probabilities of each symbol
      * @return the new fully populated grid
      */
-    public static SymbolType[][] generateGrid(Rnd rnd, int reels, int rows, int[] weights){
-        SymbolType[][] grid = new SymbolType[reels][rows];
+    public static Symbol[][] generateGrid(Rnd rnd, int reels, int rows, List<Symbol> options, List<Integer> weights){
+        Symbol[][] grid = new Symbol[reels][rows];
         for(int i = 0; i < grid.length; i++){
             for(int j = 0; j < grid[0].length; j++){
-                grid[i][j] = pick(rnd, SymbolType.values(), weights);
+                grid[i][j] = pick(rnd, options, weights);
             }
         }
         return grid;
@@ -54,17 +57,18 @@ public class GridGenerator {
      *
      * @param rnd the random number generator
      * @param grid the given non-null 2d grid matrix
+     * @param options list of options to pick from
      * @param weights the weights used for the probabilities of each symbol
      * @return the new fully populated grid
      */
-    public static SymbolType[][] populateGrid(Rnd rnd, SymbolType[][] grid, int[] weights){
+    public static Symbol[][] populateGrid(Rnd rnd, Symbol[][] grid, List<Symbol> options, List<Integer> weights){
         if(grid == null){return null;}
-        SymbolType[][] newGrid = Utils.deepClone(grid);
+        Symbol[][] newGrid = Utils.deepClone(grid);
         if(newGrid != null){
             for(int i = 0; i < newGrid.length; i++){
                 for(int j = 0; j < newGrid[0].length; j++){
                     if(newGrid[i][j] == null){
-                        newGrid[i][j] = pick(rnd, SymbolType.values(), weights);
+                        newGrid[i][j] = pick(rnd, options, weights);
                     }
                 }
             }

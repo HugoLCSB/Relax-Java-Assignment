@@ -1,25 +1,24 @@
 package relax.gaming.core;
 
-import relax.gaming.config.Payouts;
-import relax.gaming.config.SymbolType;
+import relax.gaming.config.Symbol;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class Cluster {
-    private final SymbolType type;
+    private final Symbol type;
     private final List<Coord> coords;
     private final List<Coord> toDestroy;
     private double payout;
 
-    public Cluster(SymbolType type) {
+    public Cluster(Symbol type) {
         this.type = type;
         this.coords = new ArrayList<>(){};
         this.toDestroy = new ArrayList<>(){};
         this.payout = 0;
     }
 
-    public SymbolType getType() {
+    public Symbol getType() {
         return this.type;
     }
 
@@ -39,8 +38,17 @@ public class Cluster {
         return this.toDestroy;
     }
 
-    public boolean addIfValid(SymbolType type, Coord coord, boolean isWildcard) {
-        if(!this.coords.contains(coord) && ((this.type.equals(type) || isWildcard))) {
+    /**
+     * Adds the given element to the list of Coordinates of this cluster and also to the
+     * list to be destroyed if cluster doesn't already contain the given entry and if its
+     * of same type as the cluster or wildcard.
+     *
+     * @param type type of the given element to add
+     * @param coord coordinates of the element to add
+     * @return true if added
+     */
+    public boolean addIfValid(Symbol type, Coord coord) {
+        if(!this.coords.contains(coord) && ((this.type.equals(type) || type.isWildCard()))) {
             this.coords.add(coord);
             this.toDestroy.add(coord);
             return true;
@@ -48,7 +56,7 @@ public class Cluster {
         return false;
     }
 
-    public double calculateWin(double bet){
-        return this.payout = Payouts.getPayout(this.type, this.getSize(), bet);
+    public void setPayout(double payout){
+        this.payout = payout;
     }
 }

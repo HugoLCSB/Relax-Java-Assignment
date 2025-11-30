@@ -15,6 +15,11 @@ import java.util.Map;
 
 public class HandleSimAsync implements HttpHandler{
     private static final Logger LOGGER = LogManager.getLogger(HandleSimAsync.class);
+    private final Engine engine;
+
+    public HandleSimAsync(Engine engine) {
+        this.engine = engine;
+    }
 
     @Override
     public void handleRequest(HttpServerExchange exchange) {
@@ -28,7 +33,7 @@ public class HandleSimAsync implements HttpHandler{
 
                 LOGGER.info("Received simulation request");
 
-                Engine.doSimulationAsync(SingletonExecutor.SIMULATION_POOL, spins, batchSize)
+                this.engine.doSimulationAsync(SingletonExecutor.SIMULATION_POOL, spins, batchSize)
                         .thenAccept(result -> {
                             try {
                                 String json = Json.toJson(result);
