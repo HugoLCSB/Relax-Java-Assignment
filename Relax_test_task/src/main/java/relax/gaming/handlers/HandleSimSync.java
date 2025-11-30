@@ -28,7 +28,7 @@ public class HandleSimSync implements HttpHandler{
 
                     LOGGER.info("Received simulation request");
 
-                    CompletableFuture.supplyAsync(() -> Engine.doSimulation(spins), SingletonExecutor.POOL)
+                    CompletableFuture.supplyAsync(() -> Engine.doSimulation(spins), SingletonExecutor.SIMULATION_POOL)
                             .thenAccept(result -> {
                                 try {
                                     String json = Json.toJson(result);

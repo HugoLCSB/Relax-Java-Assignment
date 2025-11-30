@@ -29,7 +29,7 @@ public class HandleGambleAsync implements HttpHandler {
 
                 LOGGER.info("Received spin request");
 
-                CompletableFuture.supplyAsync(() -> Engine.doGamble(seed, bet), SingletonExecutor.POOL)
+                CompletableFuture.supplyAsync(() -> Engine.doGamble(seed, bet), SingletonExecutor.REGULAR_REQUEST_POOL)
                         .thenAccept(result -> {
                             try {
                                 String json = Json.toJson(result);

@@ -22,13 +22,16 @@ public enum SymbolType {
         this.avalancheWeight = avalancheWeight;
     }
 
+    public SymbolType[] getValues(){
+        return SymbolType.values();
+    }
     public int getSpinWeight(){return spinWeight;}
     public int getAvalancheWeight(){return avalancheWeight;}
     public static boolean isIgnored(SymbolType type){
-        return (type.equals(SymbolType.BL));
+        return type != null && (type.equals(SymbolType.BL));
     }
     public static boolean isWildCard(SymbolType type){
-        return (type.equals(SymbolType.WR));
+        return type != null && (type.equals(SymbolType.WR));
     }
 
     /**

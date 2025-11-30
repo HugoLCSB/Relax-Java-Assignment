@@ -38,6 +38,11 @@ public class Utils {
         System.out.println();
     }
 
+    /**
+     * Formats grid into a string for easy use inside the logger.
+     * @param grid the given grid
+     * @return a formatted string containing the given grid
+     */
     public static String formatGrid(SymbolType[][] grid) {
         StringBuilder sb = new StringBuilder("\n");
 

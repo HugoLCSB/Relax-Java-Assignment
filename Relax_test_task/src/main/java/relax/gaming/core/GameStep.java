@@ -67,23 +67,24 @@ public class GameStep {
 
         for(int i = 0; i < this.grid.length; i++){
             for(int j = 0; j < this.grid.length; j++){
-                if(!visited[i][j]){
-                    //ignored and wildcards don't form clusters
-                    if(SymbolType.isIgnored(this.grid[i][j]) || SymbolType.isWildCard(this.grid[i][j])){
-                        visited[i][j] = true;
-                        continue;
-                    }
+                if(visited[i][j]){continue;}
 
-                    Cluster newCluster = new Cluster(this.grid[i][j]);
-                    clusterSearch(i, j, visited, newCluster);
-                    processNewCluster(newCluster);
+                //ignored and wildcards don't form clusters
+                if(SymbolType.isIgnored(this.grid[i][j]) || SymbolType.isWildCard(this.grid[i][j])){
+                    visited[i][j] = true;
+                    continue;
                 }
+
+                Cluster newCluster = new Cluster(this.grid[i][j]);
+                clusterSearch(i, j, visited, newCluster);
+                processNewCluster(newCluster);
             }
         }
     }
 
     private void clusterSearch(int i, int j, boolean[][] visited, Cluster cluster){
-        if(!(i >= 0 && i < this.grid.length && j >= 0 && j < this.grid.length)) {return;}
+        if(!(i >= 0 && i < this.grid.length
+                && j >= 0 && j < this.grid.length)) {return;}
 
         if(SymbolType.isIgnored(this.grid[i][j])){
             cluster.toDestroy().add(new Coord(i, j));

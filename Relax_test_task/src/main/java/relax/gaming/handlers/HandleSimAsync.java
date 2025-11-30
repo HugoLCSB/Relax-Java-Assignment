@@ -8,6 +8,7 @@ import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.ThreadContext;
 import relax.gaming.core.Engine;
 import relax.gaming.utils.Json;
+import relax.gaming.utils.SingletonExecutor;
 
 import java.util.Deque;
 import java.util.Map;
@@ -27,7 +28,7 @@ public class HandleSimAsync implements HttpHandler{
 
                 LOGGER.info("Received simulation request");
 
-                Engine.doSimulationAsync(spins, batchSize)
+                Engine.doSimulationAsync(SingletonExecutor.SIMULATION_POOL, spins, batchSize)
                         .thenAccept(result -> {
                             try {
                                 String json = Json.toJson(result);

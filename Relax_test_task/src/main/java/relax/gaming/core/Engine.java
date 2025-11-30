@@ -6,6 +6,7 @@ import relax.gaming.rnd.Rnd;
 
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -96,7 +97,7 @@ public class Engine {
      * @param n number of simulations to perform
      * @return the calculated RTP
      */
-    public static CompletableFuture<SimulationResult> doSimulationAsync(int n, int batchSize){
+    public static CompletableFuture<SimulationResult> doSimulationAsync(ExecutorService exec, int n, int batchSize){
         List<CompletableFuture<Double>> futures = new ArrayList<>();
         long start = System.currentTimeMillis();
         for (int i = 0; i < n/batchSize; i++) {
@@ -107,7 +108,7 @@ public class Engine {
                     batchTotal += round.totalPayout();
                 }
                 return batchTotal;
-            }, SingletonExecutor.POOL);
+            }, exec);
             futures.add(future);
         }
 

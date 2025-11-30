@@ -20,7 +20,7 @@ public enum ClusterBucket {
 
     public static ClusterBucket getBucket(int clusterSize){
         for(ClusterBucket b : ClusterBucket.values()){
-            if(b.starting < clusterSize && clusterSize < b.ending){
+            if(b.starting <= clusterSize && clusterSize <= b.ending){
                 return b;
             }
         }

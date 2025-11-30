@@ -40,7 +40,7 @@ public class Cluster {
     }
 
     public boolean add(SymbolType type, Coord coord) {
-        if(!this.coords.contains(coord) && (this.type.equals(type) || SymbolType.isWildCard(type))) {
+        if(!this.coords.contains(coord) && ((this.type.equals(type) || SymbolType.isWildCard(type)))) {
             this.coords.add(coord);
             return true;
         }
