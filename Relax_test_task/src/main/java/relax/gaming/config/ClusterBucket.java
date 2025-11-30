@@ -1,4 +1,6 @@
-package relax.gaming;
+package relax.gaming.config;
+
+import relax.gaming.core.Engine;
 
 public enum ClusterBucket {
     NONE(0,0),
@@ -6,7 +8,7 @@ public enum ClusterBucket {
     M(9, 12),
     ML(13,16),
     L(17,20),
-    XL(21,Engine.BOARD_SIZE);
+    XL(21, Engine.BOARD_SIZE);
 
     public final int starting;
     public final int ending;

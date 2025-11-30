@@ -1,4 +1,4 @@
-package relax.gaming;
+package relax.gaming.config;
 
 import java.util.Map;
 
