@@ -39,9 +39,10 @@ public class Cluster {
         return this.toDestroy;
     }
 
-    public boolean add(SymbolType type, Coord coord) {
-        if(!this.coords.contains(coord) && ((this.type.equals(type) || SymbolType.isWildCard(type)))) {
+    public boolean addIfValid(SymbolType type, Coord coord, boolean isWildcard) {
+        if(!this.coords.contains(coord) && ((this.type.equals(type) || isWildcard))) {
             this.coords.add(coord);
+            this.toDestroy.add(coord);
             return true;
         }
         return false;

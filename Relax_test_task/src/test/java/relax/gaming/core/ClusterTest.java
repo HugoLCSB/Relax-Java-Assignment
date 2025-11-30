@@ -10,48 +10,50 @@ class ClusterTest {
     public void AddingNullTest(){
         Cluster cluster = new Cluster(SymbolType.H1);
         assertDoesNotThrow(() ->{
-            cluster.add(null, null);
+            cluster.addIfValid(null, null, false);
         });
 
         assertEquals(0, cluster.getSize());
 
-        boolean output = cluster.add(null, null);
+        boolean output = cluster.addIfValid(null, null, false);
         assertFalse(output);
     }
 
     @Test
     public void AddingWRTest(){
         Cluster cluster = new Cluster(SymbolType.H1);
-        assertTrue(cluster.add(SymbolType.WR, new Coord(0,0)));
+        assertTrue(cluster.addIfValid(SymbolType.WR, new Coord(0,0), true));
         assertEquals(1, cluster.getSize());
     }
 
     @Test
     public void AddingBLTest(){
         Cluster cluster = new Cluster(SymbolType.H1);
-        assertFalse(cluster.add(SymbolType.BL, new Coord(0,0)));
+        assertFalse(cluster.addIfValid(SymbolType.BL, new Coord(0,0), false));
         assertEquals(0, cluster.getSize());
     }
 
     @Test
     public void AddingDifferentTest(){
         Cluster cluster = new Cluster(SymbolType.H1);
-        assertFalse(cluster.add(SymbolType.H2, new Coord(0,0)));
+        assertFalse(cluster.addIfValid(SymbolType.H2, new Coord(0,0), false));
         assertEquals(0, cluster.getSize());
     }
 
     @Test
     public void AddingSameTypeTest(){
         Cluster cluster = new Cluster(SymbolType.H1);
-        assertTrue(cluster.add(SymbolType.H1, new Coord(0,0)));
+        assertTrue(cluster.addIfValid(SymbolType.H1, new Coord(0,0), false));
         assertEquals(1, cluster.getSize());
+        assertEquals(0, cluster.getCoords().get(0).reel());
+        assertEquals(0, cluster.getCoords().get(0).row());
     }
 
     @Test
     public void AddingDupTest(){
         Cluster cluster = new Cluster(SymbolType.H1);
-        cluster.add(SymbolType.H1, new Coord(0,0));
-        assertFalse(cluster.add(SymbolType.H1, new Coord(0,0)));
+        cluster.addIfValid(SymbolType.H1, new Coord(0,0), false);
+        assertFalse(cluster.addIfValid(SymbolType.H1, new Coord(0,0), false));
         assertEquals(1, cluster.getSize());
     }
 }

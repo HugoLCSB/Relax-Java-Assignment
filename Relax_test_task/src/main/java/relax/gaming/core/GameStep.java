@@ -70,7 +70,9 @@ public class GameStep {
                 if(visited[i][j]){continue;}
 
                 //ignored and wildcards don't form clusters
-                if(SymbolType.isIgnored(this.grid[i][j]) || SymbolType.isWildCard(this.grid[i][j])){
+                if(grid[i][j] == null
+                        || SymbolType.isIgnored(this.grid[i][j])
+                        || SymbolType.isWildCard(this.grid[i][j])){
                     visited[i][j] = true;
                     continue;
                 }
@@ -83,25 +85,31 @@ public class GameStep {
     }
 
     private void clusterSearch(int i, int j, boolean[][] visited, Cluster cluster){
-        if(!(i >= 0 && i < this.grid.length
-                && j >= 0 && j < this.grid.length)) {return;}
+        if(!withinBounds(i,j)) {return;}
 
-        if(SymbolType.isIgnored(this.grid[i][j])){
-            cluster.toDestroy().add(new Coord(i, j));
+        SymbolType type = grid[i][j];
+        Coord coord = new Coord(i, j);
+        boolean isWildCard = SymbolType.isWildCard(type);
+
+        //manually add ignored to the destroy list
+        if(SymbolType.isIgnored(type)){
+            cluster.toDestroy().add(coord);
             return;
         }
 
-        if(!visited[i][j] || SymbolType.isWildCard(this.grid[i][j])){
-            if(cluster.add(this.grid[i][j], new Coord(i, j))) {
-                visited[i][j] = true;
-                cluster.toDestroy().add(new Coord(i, j));
+        if((!visited[i][j] || isWildCard) && cluster.addIfValid(type, coord,isWildCard)) {
+            visited[i][j] = true;
 
-                clusterSearch(i-1, j, visited, cluster);
-                clusterSearch(i+1, j, visited, cluster);
-                clusterSearch(i, j-1, visited, cluster);
-                clusterSearch(i, j+1, visited, cluster);
-            }
+            clusterSearch(i-1, j, visited, cluster);
+            clusterSearch(i+1, j, visited, cluster);
+            clusterSearch(i, j-1, visited, cluster);
+            clusterSearch(i, j+1, visited, cluster);
         }
+    }
+
+    private boolean withinBounds(int i, int j){
+        return (i >= 0 && i < this.grid.length
+                && j >= 0 && j < this.grid[0].length);
     }
 
     private void processNewCluster(Cluster newCluster){

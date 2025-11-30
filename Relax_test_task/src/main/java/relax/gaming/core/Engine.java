@@ -10,7 +10,6 @@ import java.util.concurrent.ExecutorService;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import relax.gaming.utils.SingletonExecutor;
 
 /**
  * This class is the Game Engine,a heart of the back-end service responsible for the game rules and mechanics.
@@ -80,22 +79,22 @@ public class Engine {
      * @param n number of simulations to perform
      * @return the calculated RTP
      */
-    public static String doSimulation(int n){
+    public static SimulationResult doSimulation(int n){
         double sum = 0;
         long start = System.currentTimeMillis();
         for(int i = 0; i < n; i++){
             Round round = doSpin(0,1);
             sum += round.totalPayout();
         }
-        long delay = System.currentTimeMillis() - start;
-        return String.format("Calculated RTP= %s in %s seconds", sum/n, delay/1000);
+        long seconds = (System.currentTimeMillis() - start)/1000;
+        return new SimulationResult(n, sum/n, seconds);
     }
 
     /**
      * Does a simulation of the game in order to calculate
      * the (RTP) return to player
      * @param n number of simulations to perform
-     * @return the calculated RTP
+     * @return Completable future that once completed returns a SimulationResult
      */
     public static CompletableFuture<SimulationResult> doSimulationAsync(ExecutorService exec, int n, int batchSize){
         List<CompletableFuture<Double>> futures = new ArrayList<>();
