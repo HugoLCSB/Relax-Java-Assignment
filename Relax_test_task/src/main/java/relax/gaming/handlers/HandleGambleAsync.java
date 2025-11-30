@@ -14,8 +14,8 @@ import java.util.Deque;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
-public class HandleSpinAsync implements HttpHandler {
-    private static final Logger LOGGER = LogManager.getLogger(HandleSpinAsync.class);
+public class HandleGambleAsync implements HttpHandler {
+    private static final Logger LOGGER = LogManager.getLogger(HandleGambleAsync.class);
 
     @Override
     public void handleRequest(HttpServerExchange exchange) {
@@ -29,7 +29,7 @@ public class HandleSpinAsync implements HttpHandler {
 
                 LOGGER.info("Received spin request");
 
-                CompletableFuture.supplyAsync(() -> Engine.doSpin(seed, bet), SingletonExecutor.POOL)
+                CompletableFuture.supplyAsync(() -> Engine.doGamble(seed, bet), SingletonExecutor.POOL)
                         .thenAccept(result -> {
                             try {
                                 String json = Json.toJson(result);
@@ -37,7 +37,7 @@ public class HandleSpinAsync implements HttpHandler {
                                         Headers.CONTENT_TYPE, "application/json"
                                 );
                                 exchange.getResponseSender().send(json);
-                                LOGGER.info("Spin completed.");
+                                LOGGER.info("Gamble completed.");
                             } finally {
                                 ThreadContext.clearMap();
                             }

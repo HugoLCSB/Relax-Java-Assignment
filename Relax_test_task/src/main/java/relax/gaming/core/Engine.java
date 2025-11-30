@@ -6,10 +6,10 @@ import relax.gaming.rnd.Rnd;
 
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutorService;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import relax.gaming.utils.SingletonExecutor;
 
 /**
  * This class is the Game Engine,a heart of the back-end service responsible for the game rules and mechanics.
@@ -67,7 +67,7 @@ public class Engine {
      * @param bet the bet amount
      * @return Round response object.
      */
-    public static Round doubleOrNothing(long seed, double bet){
+    public static Round doGamble(long seed, double bet){
         Rnd rnd = new Rnd(seed);
         double result = rnd.nextBool() ? bet*2 : 0;
         return new Round(rnd.getSeed(), bet, null, result);
@@ -88,5 +88,37 @@ public class Engine {
         }
         long delay = System.currentTimeMillis() - start;
         return String.format("Calculated RTP= %s in %s seconds", sum/n, delay/1000);
+    }
+
+    /**
+     * Does a simulation of the game in order to calculate
+     * the (RTP) return to player
+     * @param n number of simulations to perform
+     * @return the calculated RTP
+     */
+    public static CompletableFuture<SimulationResult> doSimulationAsync(int n, int batchSize){
+        List<CompletableFuture<Double>> futures = new ArrayList<>();
+        long start = System.currentTimeMillis();
+        for (int i = 0; i < n/batchSize; i++) {
+            CompletableFuture<Double> future = CompletableFuture.supplyAsync(() -> {
+                double batchTotal = 0;
+                for (int j = 0; j < batchSize; j++) {
+                    Round round = doSpin(0, 1); // 1 unit bet
+                    batchTotal += round.totalPayout();
+                }
+                return batchTotal;
+            }, SingletonExecutor.POOL);
+            futures.add(future);
+        }
+
+        return CompletableFuture
+                .allOf(futures.toArray(new CompletableFuture[0]))
+                .thenApply(v -> futures.stream()
+                        .mapToDouble(CompletableFuture::join)
+                        .sum())
+                .thenApply(result -> {
+                    long seconds = (System.currentTimeMillis() - start)/1000;
+                    return new SimulationResult(n, result/n, seconds);
+                });
     }
 }

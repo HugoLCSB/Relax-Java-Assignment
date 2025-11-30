@@ -8,14 +8,12 @@ import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.ThreadContext;
 import relax.gaming.core.Engine;
 import relax.gaming.utils.Json;
-import relax.gaming.utils.SingletonExecutor;
 
 import java.util.Deque;
 import java.util.Map;
-import java.util.concurrent.CompletableFuture;
 
-public class HandleSpinAsync implements HttpHandler {
-    private static final Logger LOGGER = LogManager.getLogger(HandleSpinAsync.class);
+public class HandleSimAsync implements HttpHandler{
+    private static final Logger LOGGER = LogManager.getLogger(HandleSimAsync.class);
 
     @Override
     public void handleRequest(HttpServerExchange exchange) {
@@ -24,12 +22,12 @@ public class HandleSpinAsync implements HttpHandler {
 
             try {
                 Map<String, Deque<String>> params = exchange.getQueryParameters();
-                long seed = params.get("seed") != null ? Long.parseLong(params.get("seed").getFirst()) : 0;
-                double bet = Double.parseDouble(params.get("bet").getFirst());
+                int spins = Integer.parseInt(params.get("spins").getFirst());
+                int batchSize = Integer.parseInt(params.get("batchSize").getFirst());
 
-                LOGGER.info("Received spin request");
+                LOGGER.info("Received simulation request");
 
-                CompletableFuture.supplyAsync(() -> Engine.doSpin(seed, bet), SingletonExecutor.POOL)
+                Engine.doSimulationAsync(spins, batchSize)
                         .thenAccept(result -> {
                             try {
                                 String json = Json.toJson(result);
@@ -37,7 +35,7 @@ public class HandleSpinAsync implements HttpHandler {
                                         Headers.CONTENT_TYPE, "application/json"
                                 );
                                 exchange.getResponseSender().send(json);
-                                LOGGER.info("Spin completed.");
+                                LOGGER.info("Simulation completed.");
                             } finally {
                                 ThreadContext.clearMap();
                             }
@@ -49,4 +47,5 @@ public class HandleSpinAsync implements HttpHandler {
             }
         });
     }
+
 }
