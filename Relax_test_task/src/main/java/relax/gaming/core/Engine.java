@@ -26,6 +26,9 @@ public class Engine {
      * @param configManager the configuration manager
      */
     public Engine(ConfigManager configManager){
+        if(configManager == null){
+            throw new IllegalArgumentException("Configuration can't be null");
+        }
         this.symbolConfig = configManager.getSymbolConfig();
         this.payoutConfig = configManager.getPayoutConfig();
     }
@@ -39,16 +42,25 @@ public class Engine {
      * @return the Round information
      */
     public GameRound doSpin(long seed, double bet){
+        if(bet <= 0){
+            throw new IllegalArgumentException("Bet amount must not be zero");
+        }
+
         Rnd rnd = new Rnd(seed);
         ThreadContext.put("seed", String.valueOf(rnd.getSeed()));
-
         int stepIndex = 0;
         Map<Integer, GameStep> result = new HashMap<>();
 
         GameStep currStep;
-        Symbol[][] currGrid =  GridGenerator.generateGrid(rnd,
-                REEL_AMOUNT, ROW_AMOUNT,
-                this.symbolConfig.spinOptions(), this.symbolConfig.spinWeights());
+        Symbol[][] currGrid;
+        try{
+            currGrid =  GridGenerator.generateGrid(rnd,
+                    REEL_AMOUNT, ROW_AMOUNT,
+                    this.symbolConfig.spinOptions(), this.symbolConfig.spinWeights());
+        }catch(Exception e){
+            LOGGER.error("Failed to generate grid", e);
+            throw new RuntimeException("Failed to generate grid", e);
+        }
         do{
             LOGGER.debug("Starting gameStep: {}", stepIndex);
             //start gameStep
@@ -60,9 +72,14 @@ public class Engine {
             //set up the next gameStep
             if(currStep.hasClusters()){
                 stepIndex++;
-                currGrid = GridGenerator.populateGrid(rnd,
-                        currStep.getGridAfterGravity(),
-                        this.symbolConfig.avalancheOptions(), this.symbolConfig.avalancheWeights());
+                try{
+                    currGrid = GridGenerator.populateGrid(rnd,
+                            currStep.getGridAfterGravity(),
+                            this.symbolConfig.avalancheOptions(), this.symbolConfig.avalancheWeights());
+                }catch (Exception e){
+                    LOGGER.error("Error populating grid after gravity", e);
+                    throw new RuntimeException("Error populating grid after gravity", e);
+                }
             }
         }while(currStep.hasClusters());
 
@@ -101,6 +118,10 @@ public class Engine {
      * @return Round response object.
      */
     public GameRound doGamble(long seed, double bet){
+        if(bet <= 0){
+            throw new IllegalArgumentException("Bet amount must not be zero");
+        }
+
         Rnd rnd = new Rnd(seed);
         double result = rnd.nextBool() ? bet*2 : 0;
         return new GameRound(rnd.getSeed(), bet, null, result);

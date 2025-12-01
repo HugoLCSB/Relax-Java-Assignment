@@ -14,6 +14,9 @@ public class SymbolConfig {
     private final List<Integer> avalancheWeights = new ArrayList<>();
 
     public SymbolConfig(List<Symbol> incoming){
+        if(incoming == null){
+            throw new IllegalArgumentException("Symbol list must not be null");
+        }
         int spinTotal = 0;
         int avalancheTotal = 0;
         for(Symbol symbol : incoming){

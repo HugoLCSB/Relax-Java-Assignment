@@ -17,18 +17,17 @@ public class GridGenerator {
      * @param <T> the type of the option
      */
     public static<T> T pick(Rnd rnd, List<T> options, List<Integer> weights){
-        //TODO: check arrays of same size
-        if(options.size() == weights.size()){
-            //in a cumulative list the last entry is the total
-            int total = weights.get(weights.size()-1);
-            int rand = rnd.nextInt(0, total);
-            for(int i = 0; i < options.size(); i++){
-                if(rand <= weights.get(i)){
-                    return options.get(i);
-                }
+        if(options == null || weights == null || options.size() != weights.size()){
+            throw new IllegalArgumentException("Options and Weights list must be non null and of same size");
+        }
+        //in a cumulative list the last entry is the total
+        int total = weights.get(weights.size()-1);
+        int rand = rnd.nextInt(0, total);
+        for(int i = 0; i < options.size(); i++){
+            if(rand <= weights.get(i)){
+                return options.get(i);
             }
         }
-
         return null;
     }
 
@@ -43,6 +42,9 @@ public class GridGenerator {
      * @return the new fully populated grid
      */
     public static Symbol[][] generateGrid(Rnd rnd, int reels, int rows, List<Symbol> options, List<Integer> weights){
+        if(options == null || weights == null || options.size() != weights.size()){
+            throw new IllegalArgumentException("Options and Weights list must be non null and of same size");
+        }
         Symbol[][] grid = new Symbol[reels][rows];
         for(int i = 0; i < grid.length; i++){
             for(int j = 0; j < grid[0].length; j++){
@@ -63,6 +65,9 @@ public class GridGenerator {
      */
     public static Symbol[][] populateGrid(Rnd rnd, Symbol[][] grid, List<Symbol> options, List<Integer> weights){
         if(grid == null){return null;}
+        if(options == null || weights == null || options.size() != weights.size()){
+            throw new IllegalArgumentException("Options and Weights list must be non null and of same size");
+        }
         Symbol[][] newGrid = Utils.deepClone(grid);
         if(newGrid != null){
             for(int i = 0; i < newGrid.length; i++){

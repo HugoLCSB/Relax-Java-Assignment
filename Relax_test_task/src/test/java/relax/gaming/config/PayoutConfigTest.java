@@ -3,6 +3,8 @@ package relax.gaming.config;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.io.IOException;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class PayoutConfigTest {
@@ -15,8 +17,12 @@ class PayoutConfigTest {
 
     @BeforeEach
     void setup() {
-        ConfigManager config = new ConfigManager(SYMBOL_FILE, PAYOUT_FILE, BUCKET_FILE);
-        this.payoutConfig = config.getPayoutConfig();
+        try{
+            ConfigManager config = new ConfigManager(SYMBOL_FILE, PAYOUT_FILE, BUCKET_FILE);
+            this.payoutConfig = config.getPayoutConfig();
+        }catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     @Test

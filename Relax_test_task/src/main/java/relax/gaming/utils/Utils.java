@@ -1,5 +1,7 @@
 package relax.gaming.utils;
 
+import io.undertow.server.HttpServerExchange;
+
 public class Utils {
     /**
      * Performs a safe clone of a 2D array.
@@ -33,5 +35,16 @@ public class Utils {
         }
 
         return sb.toString();
+    }
+
+    /**
+     * Quick method that lets you do a response with a specific http status code in a single line
+     * @param exchange http exchange object
+     * @param code the given code
+     * @param message the given message
+     */
+    public static void sendHttpResponse(HttpServerExchange exchange, int code, String message){
+        exchange.setStatusCode(code);
+        exchange.getResponseSender().send(message);
     }
 }

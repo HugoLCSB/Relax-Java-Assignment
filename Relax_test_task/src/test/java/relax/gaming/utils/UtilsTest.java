@@ -18,7 +18,11 @@ class UtilsTest {
 
     @BeforeEach
     void setup() {
-        this.config = new ConfigManager(SYMBOL_FILE, PAYOUT_FILE, BUCKET_FILE);
+        try{
+            this.config = new ConfigManager(SYMBOL_FILE, PAYOUT_FILE, BUCKET_FILE);
+        }catch(Exception e){
+            throw new RuntimeException(e);
+        }
     }
 
     @Test

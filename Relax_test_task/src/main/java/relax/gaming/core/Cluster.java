@@ -12,6 +12,9 @@ public class Cluster {
     private double payout;
 
     public Cluster(Symbol type) {
+        if(type == null){
+            throw new IllegalArgumentException("Cluster type must not be null");
+        }
         this.type = type;
         this.coords = new ArrayList<>(){};
         this.toDestroy = new ArrayList<>(){};

@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Test;
 import relax.gaming.config.ConfigManager;
 import relax.gaming.utils.SingletonExecutor;
 
+import java.io.IOException;
 import java.util.concurrent.CompletableFuture;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -19,8 +20,12 @@ public class EngineTest {
 
     @BeforeEach
     void setup() {
-        ConfigManager config = new ConfigManager(SYMBOL_FILE, PAYOUT_FILE, BUCKET_FILE);
-        this.engine = new Engine(config);
+        try {
+            ConfigManager config = new ConfigManager(SYMBOL_FILE, PAYOUT_FILE, BUCKET_FILE);
+            this.engine = new Engine(config);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     @Test

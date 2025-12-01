@@ -7,6 +7,7 @@ import org.apache.logging.log4j.Logger;
 import relax.gaming.config.*;
 import relax.gaming.core.Engine;
 import relax.gaming.handlers.*;
+import relax.gaming.utils.SingletonExecutor;
 
 public class Main {
     private static final Logger LOGGER = LogManager.getLogger(Main.class);
@@ -17,24 +18,40 @@ public class Main {
     private static final String BUCKET_FILE = "clusterBuckets.json";
 
     public static void main(String[] args) {
-        LOGGER.info("Starting Server");
+        try{
+            LOGGER.info("Starting Server");
 
-        ConfigManager configManager = new ConfigManager(SYMBOL_FILE, PAYOUT_FILE, BUCKET_FILE);
-        Engine engine = new Engine(configManager);
-        asyncServer(engine);
+            ConfigManager configManager = new ConfigManager(SYMBOL_FILE, PAYOUT_FILE, BUCKET_FILE);
+            Engine engine = new Engine(configManager);
+            Undertow server = asyncServer(engine);
+
+            Runtime.getRuntime().addShutdownHook(new Thread(() ->{
+                LOGGER.info("Shutdown initiated.");
+                server.stop();
+                SingletonExecutor.shutdown();
+            }));
+        }catch (Exception e){
+            LOGGER.error("Unexpected error running main", e);
+        }
     }
 
-    public static void asyncServer(Engine engine) {
-        Undertow server = Undertow.builder()
-            .addHttpListener(DEFAULT_PORT, DEFAULT_HOST)
-            .setHandler(
-                    Handlers.path()
-                            .addPrefixPath("/spin", new HandleSpinAsync(engine))
-                            .addPrefixPath("/sim", new HandleSimAsync(engine))
-                            .addPrefixPath("/gamble", new HandleGambleAsync(engine))
-            )
-            .build();
-        server.start();
-        LOGGER.info("Server has started on {}:{}", DEFAULT_HOST, DEFAULT_PORT);
+    public static Undertow asyncServer(Engine engine) {
+        try{
+            Undertow server = Undertow.builder()
+                    .addHttpListener(DEFAULT_PORT, DEFAULT_HOST)
+                    .setHandler(
+                            Handlers.path()
+                                    .addPrefixPath("/spin", new HandleSpinAsync(engine))
+                                    .addPrefixPath("/sim", new HandleSimAsync(engine))
+                                    .addPrefixPath("/gamble", new HandleGambleAsync(engine))
+                    )
+                    .build();
+            server.start();
+            LOGGER.info("Server has started on {}:{}", DEFAULT_HOST, DEFAULT_PORT);
+            return server;
+        }catch(Exception e){
+            LOGGER.error("Error starting the server", e);
+            throw e;
+        }
     }
 }

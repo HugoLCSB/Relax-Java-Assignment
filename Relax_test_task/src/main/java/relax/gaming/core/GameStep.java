@@ -25,6 +25,9 @@ public class GameStep {
     private double stepPayout;
 
     public GameStep(Symbol[][] grid, int minClusterSize) {
+        if(grid == null){
+            throw new IllegalArgumentException("Grid must not be null");
+        }
         this.grid = Utils.deepClone(grid);
         this.clusters = new ArrayList<>();
         this.minClusterSize = minClusterSize;
@@ -63,13 +66,18 @@ public class GameStep {
      * Executes the GameStep.
      */
     public void compute(){
-        LOGGER.debug("Starting Grid: {}", Utils.formatGrid(this.grid));
-        findClusters();
-        if(hasClusters()){
-            destroyGrid();
-            LOGGER.debug("Grid after destroy: {}", Utils.formatGrid(this.gridAfterDestroy));
-            applyGravity();
-            LOGGER.debug("Grid after gravity: {}",Utils.formatGrid(this.gridAfterGravity));
+        try{
+            LOGGER.debug("Starting Grid: {}", Utils.formatGrid(this.grid));
+            findClusters();
+            if(hasClusters()){
+                destroyGrid();
+                LOGGER.debug("Grid after destroy: {}", Utils.formatGrid(this.gridAfterDestroy));
+                applyGravity();
+                LOGGER.debug("Grid after gravity: {}",Utils.formatGrid(this.gridAfterGravity));
+            }
+        }catch(Exception e){
+            LOGGER.error("Error while game step computation", e);
+            throw e;
         }
     }
 

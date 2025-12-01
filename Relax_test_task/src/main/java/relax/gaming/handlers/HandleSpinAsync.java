@@ -9,6 +9,7 @@ import org.apache.logging.log4j.ThreadContext;
 import relax.gaming.core.Engine;
 import relax.gaming.utils.Json;
 import relax.gaming.utils.SingletonExecutor;
+import relax.gaming.utils.Utils;
 
 import java.util.Deque;
 import java.util.Map;
@@ -19,21 +20,30 @@ public class HandleSpinAsync implements HttpHandler {
     private final Engine engine;
 
     public HandleSpinAsync(Engine engine) {
+        if(engine == null){
+            throw new IllegalArgumentException("Engine can't be null");
+        }
         this.engine = engine;
     }
 
     @Override
     public void handleRequest(HttpServerExchange exchange) {
-
         exchange.dispatch(() -> {
-
             try {
                 Map<String, Deque<String>> params = exchange.getQueryParameters();
-                long seed = params.get("seed") != null ? Long.parseLong(params.get("seed").getFirst()) : 0;
-                double bet = Double.parseDouble(params.get("bet").getFirst());
+                String seedParam = params.get("seed") != null ? params.get("seed").getFirst() : null;
+                String betParam = params.get("bet") != null ? params.get("bet").getFirst() : null;
+
+                if(betParam == null){
+                    LOGGER.warn("Missing required parameter bet");
+                    Utils.sendHttpResponse(exchange, 400, "Missing required parameter bet");
+                    return;
+                }
+
+                long seed = seedParam != null ? Long.parseLong(seedParam) : 0;
+                double bet = Double.parseDouble(betParam);
 
                 LOGGER.info("Received spin request");
-
                 CompletableFuture.supplyAsync(() -> this.engine.doSpin(seed, bet), SingletonExecutor.REGULAR_REQUEST_POOL)
                         .thenAccept(result -> {
                             try {
@@ -46,11 +56,18 @@ public class HandleSpinAsync implements HttpHandler {
                             } finally {
                                 ThreadContext.clearMap();
                             }
+                        })
+                        .exceptionally(e -> {
+                            LOGGER.error("Error doing spin execution", e);
+                            Utils.sendHttpResponse(exchange, 500, "Internal error");
+                            return null;
                         });
+            }catch(NumberFormatException e){
+                LOGGER.error("Invalid parameter values", e);
+                Utils.sendHttpResponse(exchange, 400, "Invalid parameter values");
             } catch (Exception e) {
                 LOGGER.error("Spin request failed", e);
-                exchange.setStatusCode(400);
-                exchange.getResponseSender().send("Bad request");
+                Utils.sendHttpResponse(exchange, 400, "Bad request");
             }
         });
     }
