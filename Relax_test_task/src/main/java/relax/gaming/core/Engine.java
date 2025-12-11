@@ -2,7 +2,6 @@ package relax.gaming.core;
 
 import org.apache.logging.log4j.ThreadContext;
 import relax.gaming.config.*;
-import relax.gaming.rnd.Rnd;
 
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
@@ -10,6 +9,9 @@ import java.util.concurrent.ExecutorService;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import relax.gaming.rnd.Rnd;
+import relax.gaming.rnd.RndRegular;
+import relax.gaming.rnd.RndSecure;
 
 /**
  * This class is the Game Engine,a heart of the back-end service responsible for the game rules and mechanics.
@@ -46,12 +48,42 @@ public class Engine {
             throw new IllegalArgumentException("Bet amount must not be zero");
         }
 
-        Rnd rnd = new Rnd(seed);
+        Rnd rnd = new RndSecure(seed);
         ThreadContext.put("seed", String.valueOf(rnd.getSeed()));
         int stepIndex = 0;
         Map<Integer, GameStep> result = new HashMap<>();
 
         GameStep currStep;
+        Symbol[][] currGrid = getSymbols(rnd);
+        do{
+            LOGGER.debug("Starting gameStep: {}", stepIndex);
+            //start gameStep
+            currStep = new GameStep(currGrid, payoutConfig.getMinClusterSize());
+            currStep.compute();
+            result.put(stepIndex, currStep);
+            LOGGER.debug("Step payout is {}", currStep.getStepPayout());
+
+            //exit early when no clusters
+            if(currStep.hasClusters()){ break; }
+
+            //set up the next gameStep
+            stepIndex++;
+            try{
+                currGrid = GridGenerator.populateGrid(rnd,
+                        currStep.getGridAfterGravity(),
+                        this.symbolConfig.avalancheOptions(), this.symbolConfig.avalancheWeights());
+            }catch (Exception e){
+                LOGGER.error("Error populating grid after gravity", e);
+                throw new RuntimeException("Error populating grid after gravity", e);
+            }
+        }while(currStep.hasClusters());
+
+        double totalPayout = calculatePayout(result, bet);
+        LOGGER.debug("Total round payout is {}", totalPayout);
+        return new GameRound(seed, bet, result, totalPayout);
+    }
+
+    private Symbol[][] getSymbols(Rnd rnd) {
         Symbol[][] currGrid;
         try{
             currGrid =  GridGenerator.generateGrid(rnd,
@@ -61,31 +93,7 @@ public class Engine {
             LOGGER.error("Failed to generate grid", e);
             throw new RuntimeException("Failed to generate grid", e);
         }
-        do{
-            LOGGER.debug("Starting gameStep: {}", stepIndex);
-            //start gameStep
-            currStep = new GameStep(currGrid, payoutConfig.getMinClusterSize());
-            currStep.compute();
-            result.put(stepIndex, currStep);
-            LOGGER.debug("Step payout is {}", currStep.getStepPayout());
-
-            //set up the next gameStep
-            if(currStep.hasClusters()){
-                stepIndex++;
-                try{
-                    currGrid = GridGenerator.populateGrid(rnd,
-                            currStep.getGridAfterGravity(),
-                            this.symbolConfig.avalancheOptions(), this.symbolConfig.avalancheWeights());
-                }catch (Exception e){
-                    LOGGER.error("Error populating grid after gravity", e);
-                    throw new RuntimeException("Error populating grid after gravity", e);
-                }
-            }
-        }while(currStep.hasClusters());
-
-        double totalPayout = calculatePayout(result, bet);
-        LOGGER.debug("Total round payout is {}", totalPayout);
-        return new GameRound(seed, bet, result, totalPayout);
+        return currGrid;
     }
 
     /**
@@ -122,7 +130,7 @@ public class Engine {
             throw new IllegalArgumentException("Bet amount must not be zero");
         }
 
-        Rnd rnd = new Rnd(seed);
+        Rnd rnd = new RndRegular(seed);
         double result = rnd.nextBool() ? bet*2 : 0;
         return new GameRound(rnd.getSeed(), bet, null, result);
     }
@@ -130,7 +138,7 @@ public class Engine {
     /**
      * Does a simulation of the game in order to calculate
      * the (RTP) return to player
-     * @param exec the executor service to use for this simulation execution
+     * @param exec the executor service to use for this simulation execution //TODO: this parameter is useless, should just decide here since its singleton and we have access
      * @param n number of simulations to perform
      * @param batchSize the batchSize
      * @return Completable future that once completed returns a SimulationResult
@@ -151,13 +159,13 @@ public class Engine {
         }
 
         return CompletableFuture
-                .allOf(futures.toArray(new CompletableFuture[0]))
-                .thenApply(v -> futures.stream()
-                        .mapToDouble(CompletableFuture::join)
-                        .sum())
-                .thenApply(result -> {
-                    long seconds = (System.currentTimeMillis() - start)/1000;
-                    return new SimulationResult(n, result/n, seconds);
-                });
+            .allOf(futures.toArray(new CompletableFuture[0]))
+            .thenApply(v -> futures.stream()
+                    .mapToDouble(CompletableFuture::join)
+                    .sum())
+            .thenApply(result -> {
+                long seconds = (System.currentTimeMillis() - start)/1000;
+                return new SimulationResult(n, result/n, seconds);
+            });
     }
 }

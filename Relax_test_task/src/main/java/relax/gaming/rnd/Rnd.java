@@ -1,10 +1,11 @@
 package relax.gaming.rnd;
 
 import java.util.Random;
+import java.util.random.RandomGenerator;
 
-public class Rnd {
-    private final Random random;
-    private final long seed;
+public abstract class Rnd {
+    protected final RandomGenerator random;
+    protected final long seed;
 
     /**
      * For this implementation the seed is optional in the sense that
@@ -12,13 +13,12 @@ public class Rnd {
      *
      * @param seed the given seed
      */
-    public Rnd(long seed){
-        if(seed == 0){
-            seed = new Random().nextLong();
-        }
-        this.seed = seed;
-        this.random = new Random(seed);
+    protected Rnd(long seed){
+        this.seed = seed != 0 ? seed : new Random().nextLong();
+        this.random = getRandom();
     }
+
+    protected abstract RandomGenerator getRandom();
 
     /**
      * Gets the seed used in this Random.

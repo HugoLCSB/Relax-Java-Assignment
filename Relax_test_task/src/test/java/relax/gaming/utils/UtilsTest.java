@@ -6,6 +6,7 @@ import relax.gaming.config.ConfigManager;
 import relax.gaming.config.Symbol;
 import relax.gaming.core.GridGenerator;
 import relax.gaming.rnd.Rnd;
+import relax.gaming.rnd.RndRegular;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -27,7 +28,7 @@ class UtilsTest {
 
     @Test
     public void DeepCloneTest(){
-        Rnd rnd = new Rnd(0);
+        Rnd rnd = new RndRegular(0);
         Symbol[][] grid = GridGenerator.generateGrid(rnd, 8,8,
                 config.getSymbolConfig().spinOptions(), config.getSymbolConfig().spinWeights());
         Symbol[][] clone = Utils.deepClone(grid);
