@@ -3,19 +3,25 @@ package relax.gaming.config;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import java.util.HashMap;
 import java.util.Map;
 
 public class PayoutConfig {
     private static final Logger LOGGER = LogManager.getLogger(PayoutConfig.class);
-    private final Map<String, Map<String, Double>> payoutTable;
+    private final Map<String, Map<String, Double>> payoutTable = new HashMap<>();
     private final Bucket[] buckets;
     private final int minClusterSize;
 
-    public PayoutConfig(Map<String, Map<String, Double>> payoutTable, Bucket[] buckets) {
-        if (payoutTable == null || buckets == null) {
+    public PayoutConfig(Payout[] payouts, Bucket[] buckets) {
+        if (payouts == null || buckets == null) {
             throw new IllegalArgumentException("Payout table and buckets list cannot be null");
         }
-        this.payoutTable = payoutTable;
+
+        for (Payout payout : payouts) {
+            Map<String, Double> inner = this.payoutTable.computeIfAbsent(payout.symbol(), k -> new HashMap<>());
+            inner.put(payout.bucket(), payout.amount());
+        }
+        
         this.buckets = buckets;
         this.minClusterSize = findMinClusterSize();
     }
@@ -37,7 +43,7 @@ public class PayoutConfig {
             return 0;
         }
 
-        Map<String, Double> payoutMap = payoutTable.get(type);
+        Map<String, Double> payoutMap = this.payoutTable.get(type);
         if (payoutMap == null) {
             LOGGER.warn("No payout map found for parameters: type={}, clusterSize={}, bet{}, no payout calculated",
                     type, clusterSize, bet);
