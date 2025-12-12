@@ -1,5 +1,8 @@
 package relax.gaming;
 
+import com.beust.jcommander.JCommander;
+import com.beust.jcommander.Parameter;
+import com.beust.jcommander.ParameterException;
 import io.undertow.Handlers;
 import io.undertow.Undertow;
 import org.apache.logging.log4j.LogManager;
@@ -15,15 +18,28 @@ public class Main {
     private static final Logger LOGGER = LogManager.getLogger(Main.class);
     private static final String DEFAULT_HOST = "localhost";
     private static final int DEFAULT_PORT = 8080;
-    private static final String SYMBOL_FILE = "symbols.json";
-    private static final String PAYOUT_FILE = "payouts.json";
-    private static final String BUCKET_FILE = "clusterBuckets.json";
+
+    @Parameter(names = "--symbols", description = "Path to config file 1")
+    private String SYMBOL_FILE = "symbols.json";
+
+    @Parameter(names = "--payouts", description = "Path to config file 2")
+    private String PAYOUT_FILE = "payouts.json";
+
+    @Parameter(names = "--buckets", description = "Path to config file 3")
+    private String BUCKET_FILE = "clusterBuckets.json";
 
     public static void main(String[] args) {
         try {
+            Main main = new Main();
+
+            JCommander.newBuilder()
+                    .addObject(main)
+                    .build()
+                    .parse(args);
+
             LOGGER.info("Starting Server");
 
-            ConfigManager configManager = new ConfigManager(SYMBOL_FILE, PAYOUT_FILE, BUCKET_FILE);
+            ConfigManager configManager = new ConfigManager(main.SYMBOL_FILE, main.PAYOUT_FILE, main.BUCKET_FILE);
             Engine engine = new Engine(configManager);
             Undertow server = asyncServer(engine);
 
@@ -32,6 +48,8 @@ public class Main {
                 server.stop();
                 SingletonExecutor.shutdown();
             }));
+        } catch (ParameterException e) {
+            LOGGER.error("Invalid command", e);
         } catch (Exception e) {
             LOGGER.error("Unexpected error running main", e);
         }
