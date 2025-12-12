@@ -44,11 +44,10 @@ public class ConfigManager {
 
     private PayoutConfig loadPayoutConfig(ObjectMapper mapper, String payoutFile, String bucketsFile) throws IOException {
         Map<String, Map<String, Double>> payouts =
-                mapper.readValue(new File(payoutFile), new TypeReference<>() {});
+                mapper.readValue(new File(payoutFile), new TypeReference<>() {
+                });
 
-        List<Bucket> buckets = Arrays.asList(
-                mapper.readValue(new File(bucketsFile), Bucket[].class)
-        );
+        Bucket[] buckets = mapper.readValue(new File(bucketsFile), Bucket[].class);
         return new PayoutConfig(payouts, buckets);
     }
 }

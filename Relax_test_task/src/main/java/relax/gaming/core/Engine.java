@@ -1,17 +1,19 @@
 package relax.gaming.core;
 
-import org.apache.logging.log4j.ThreadContext;
-import relax.gaming.config.*;
-
-import java.util.*;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutorService;
-
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.ThreadContext;
+import relax.gaming.config.ConfigManager;
+import relax.gaming.config.PayoutConfig;
+import relax.gaming.config.Symbol;
+import relax.gaming.config.SymbolConfig;
 import relax.gaming.rnd.Rnd;
 import relax.gaming.rnd.RndRegular;
-import relax.gaming.rnd.RndSecure;
+import relax.gaming.utils.SingletonExecutor;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.CompletableFuture;
 
 /**
  * This class is the Game Engine,a heart of the back-end service responsible for the game rules and mechanics.
@@ -25,10 +27,11 @@ public class Engine {
 
     /**
      * The Constructor
+     *
      * @param configManager the configuration manager
      */
-    public Engine(ConfigManager configManager){
-        if(configManager == null){
+    public Engine(ConfigManager configManager) {
+        if (configManager == null) {
             throw new IllegalArgumentException("Configuration can't be null");
         }
         this.symbolConfig = configManager.getSymbolConfig();
@@ -40,73 +43,59 @@ public class Engine {
      * that can have many steps and has a total money payout.
      *
      * @param seed the given seed
-     * @param bet the given money bet
+     * @param bet  the given money bet
      * @return the Round information
      */
-    public GameRound doSpin(long seed, double bet){
-        if(bet <= 0){
+    public GameRound doSpin(long seed, double bet) {
+        if (bet <= 0) {
             throw new IllegalArgumentException("Bet amount must not be zero");
         }
 
-        Rnd rnd = new RndSecure(seed);
+        Rnd rnd = new RndRegular(seed);
         ThreadContext.put("seed", String.valueOf(rnd.getSeed()));
         int stepIndex = 0;
-        Map<Integer, GameStep> result = new HashMap<>();
+        List<GameStep> result = new ArrayList<>();
 
         GameStep currStep;
-        Symbol[][] currGrid = getSymbols(rnd);
-        do{
+        Symbol[][] currGrid = GridGenerator.generateGrid(rnd,
+                REEL_AMOUNT, ROW_AMOUNT,
+                this.symbolConfig.spinOptions(), this.symbolConfig.spinWeights());
+        do {
             LOGGER.debug("Starting gameStep: {}", stepIndex);
             //start gameStep
             currStep = new GameStep(currGrid, payoutConfig.getMinClusterSize());
             currStep.compute();
-            result.put(stepIndex, currStep);
-            LOGGER.debug("Step payout is {}", currStep.getStepPayout());
+            result.add(currStep);
 
             //exit early when no clusters
-            if(currStep.hasClusters()){ break; }
+            if (!currStep.hasClusters()) {
+                break;
+            }
 
             //set up the next gameStep
             stepIndex++;
-            try{
-                currGrid = GridGenerator.populateGrid(rnd,
-                        currStep.getGridAfterGravity(),
-                        this.symbolConfig.avalancheOptions(), this.symbolConfig.avalancheWeights());
-            }catch (Exception e){
-                LOGGER.error("Error populating grid after gravity", e);
-                throw new RuntimeException("Error populating grid after gravity", e);
-            }
-        }while(currStep.hasClusters());
+            currGrid = GridGenerator.populateGrid(rnd,
+                    currStep.getGridAfterGravity(),
+                    this.symbolConfig.avalancheOptions(), this.symbolConfig.avalancheWeights());
+        } while (currStep.hasClusters());
 
         double totalPayout = calculatePayout(result, bet);
         LOGGER.debug("Total round payout is {}", totalPayout);
         return new GameRound(seed, bet, result, totalPayout);
     }
 
-    private Symbol[][] getSymbols(Rnd rnd) {
-        Symbol[][] currGrid;
-        try{
-            currGrid =  GridGenerator.generateGrid(rnd,
-                    REEL_AMOUNT, ROW_AMOUNT,
-                    this.symbolConfig.spinOptions(), this.symbolConfig.spinWeights());
-        }catch(Exception e){
-            LOGGER.error("Failed to generate grid", e);
-            throw new RuntimeException("Failed to generate grid", e);
-        }
-        return currGrid;
-    }
-
     /**
      * Calculates the payout for a given round
+     *
      * @param steps the steps of the round to calculate from
-     * @param bet the bet for this round
+     * @param bet   the bet for this round
      * @return the total payout for this round
      */
-    private double calculatePayout(Map<Integer, GameStep> steps, double bet){
+    private double calculatePayout(List<GameStep> steps, double bet) {
         double total = 0;
-        for(GameStep step : steps.values()){
+        for (GameStep step : steps) {
             double stepPayout = 0;
-            for(Cluster cluster : step.getClusters()){
+            for (Cluster cluster : step.getClusters()) {
                 double cPayout =
                         this.payoutConfig.getPayout(cluster.getType().getName(), cluster.getSize(), bet);
                 cluster.setPayout(cPayout);
@@ -121,32 +110,33 @@ public class Engine {
     /**
      * Does a bet of double or nothing, 50/50 chance, of either doubling
      * the money or getting nothing.
+     *
      * @param seed the given seed
-     * @param bet the bet amount
+     * @param bet  the bet amount
      * @return Round response object.
      */
-    public GameRound doGamble(long seed, double bet){
-        if(bet <= 0){
+    public GameRound doGamble(long seed, double bet) {
+        if (bet <= 0) {
             throw new IllegalArgumentException("Bet amount must not be zero");
         }
 
         Rnd rnd = new RndRegular(seed);
-        double result = rnd.nextBool() ? bet*2 : 0;
+        double result = rnd.nextBool() ? bet * 2 : 0;
         return new GameRound(rnd.getSeed(), bet, null, result);
     }
 
     /**
      * Does a simulation of the game in order to calculate
      * the (RTP) return to player
-     * @param exec the executor service to use for this simulation execution //TODO: this parameter is useless, should just decide here since its singleton and we have access
-     * @param n number of simulations to perform
+     *
+     * @param n         number of simulations to perform
      * @param batchSize the batchSize
      * @return Completable future that once completed returns a SimulationResult
      */
-    public CompletableFuture<SimulationResult> doSimulationAsync(ExecutorService exec, int n, int batchSize){
+    public CompletableFuture<SimulationResult> doSimulationAsync(int n, int batchSize) {
         List<CompletableFuture<Double>> futures = new ArrayList<>();
         long start = System.currentTimeMillis();
-        for (int i = 0; i < n/batchSize; i++) {
+        for (int i = 0; i < n / batchSize; i++) {
             CompletableFuture<Double> future = CompletableFuture.supplyAsync(() -> {
                 double batchTotal = 0;
                 for (int j = 0; j < batchSize; j++) {
@@ -154,18 +144,18 @@ public class Engine {
                     batchTotal += round.totalPayout();
                 }
                 return batchTotal;
-            }, exec);
+            }, SingletonExecutor.SIMULATION_POOL);
             futures.add(future);
         }
 
         return CompletableFuture
-            .allOf(futures.toArray(new CompletableFuture[0]))
-            .thenApply(v -> futures.stream()
-                    .mapToDouble(CompletableFuture::join)
-                    .sum())
-            .thenApply(result -> {
-                long seconds = (System.currentTimeMillis() - start)/1000;
-                return new SimulationResult(n, result/n, seconds);
-            });
+                .allOf(futures.toArray(new CompletableFuture[0]))
+                .thenApply(v -> futures.stream()
+                        .mapToDouble(CompletableFuture::join)
+                        .sum())
+                .thenApply(result -> {
+                    long seconds = (System.currentTimeMillis() - start) / 1000;
+                    return new SimulationResult(n, result / n, seconds);
+                });
     }
 }

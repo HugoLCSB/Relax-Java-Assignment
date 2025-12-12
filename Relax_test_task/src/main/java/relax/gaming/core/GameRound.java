@@ -1,6 +1,6 @@
 package relax.gaming.core;
 
-import java.util.Map;
+import java.util.List;
 
-public record GameRound(long seed, double bet, Map<Integer, GameStep> steps, double totalPayout) {
+public record GameRound(long seed, double bet, List<GameStep> steps, double totalPayout) {
 }

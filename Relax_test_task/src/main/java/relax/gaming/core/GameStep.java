@@ -1,14 +1,14 @@
 package relax.gaming.core;
 
 import org.apache.logging.log4j.LogManager;
-import relax.gaming.utils.Utils;
+import org.apache.logging.log4j.Logger;
 import relax.gaming.config.Symbol;
+import relax.gaming.utils.Utils;
 
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import org.apache.logging.log4j.Logger;
 
 /**
  * This class represents a GameStep, which is a single step in a GameRound.
@@ -25,7 +25,7 @@ public class GameStep {
     private double stepPayout;
 
     public GameStep(Symbol[][] grid, int minClusterSize) {
-        if(grid == null){
+        if (grid == null) {
             throw new IllegalArgumentException("Grid must not be null");
         }
         this.grid = Utils.deepClone(grid);
@@ -34,48 +34,48 @@ public class GameStep {
         this.stepPayout = 0;
     }
 
-    public Symbol[][] getGrid(){
+    public Symbol[][] getGrid() {
         return this.grid;
     }
 
-    public List<Cluster> getClusters(){
+    public List<Cluster> getClusters() {
         return this.clusters;
     }
 
-    public Symbol[][] getGridAfterDestroy(){
+    public Symbol[][] getGridAfterDestroy() {
         return this.gridAfterDestroy;
     }
 
-    public Symbol[][] getGridAfterGravity(){
+    public Symbol[][] getGridAfterGravity() {
         return this.gridAfterGravity;
     }
 
-    public double getStepPayout(){
+    public double getStepPayout() {
         return this.stepPayout;
     }
 
-    public void setStepPayout(double stepPayout){
+    public void setStepPayout(double stepPayout) {
         this.stepPayout = stepPayout;
     }
 
-    public boolean hasClusters(){
+    public boolean hasClusters() {
         return !this.clusters.isEmpty();
     }
 
     /**
      * Executes the GameStep.
      */
-    public void compute(){
-        try{
+    public void compute() {
+        try {
             LOGGER.debug("Starting Grid: {}", Utils.formatGrid(this.grid));
             findClusters();
-            if(hasClusters()){
+            if (hasClusters()) {
                 destroyGrid();
                 LOGGER.debug("Grid after destroy: {}", Utils.formatGrid(this.gridAfterDestroy));
                 applyGravity();
-                LOGGER.debug("Grid after gravity: {}",Utils.formatGrid(this.gridAfterGravity));
+                LOGGER.debug("Grid after gravity: {}", Utils.formatGrid(this.gridAfterGravity));
             }
-        }catch(Exception e){
+        } catch (Exception e) {
             LOGGER.error("Error while game step computation", e);
             throw e;
         }
@@ -86,17 +86,19 @@ public class GameStep {
      * are explored before backtracking, if same type found, recursively explore those
      * neighbors and so on, until there are no same type neighbors or the grid is totally visited.
      */
-    private void findClusters(){
+    private void findClusters() {
         boolean[][] visited = new boolean[this.grid.length][this.grid.length];
 
-        for(int i = 0; i < this.grid.length; i++){
-            for(int j = 0; j < this.grid.length; j++){
-                if(visited[i][j]){continue;}
+        for (int i = 0; i < this.grid.length; i++) {
+            for (int j = 0; j < this.grid.length; j++) {
+                if (visited[i][j]) {
+                    continue;
+                }
 
-                //ignored and wildcards don't form clusters
-                if(grid[i][j] == null
+                //blockers and wildcards don't form clusters
+                if (grid[i][j] == null
                         || this.grid[i][j].isBlocker()
-                        || this.grid[i][j].isWildCard()){
+                        || this.grid[i][j].isWildCard()) {
                     visited[i][j] = true;
                     continue;
                 }
@@ -111,40 +113,43 @@ public class GameStep {
     /**
      * Recursive search to find same type neighbors.
      *
-     * @param i reel of the current position
-     * @param j row of the current position
+     * @param i       reel of the current position
+     * @param j       row of the current position
      * @param visited list of all visited positions
      * @param cluster the current cluster being explored
      */
-    private void clusterSearch(int i, int j, boolean[][] visited, Cluster cluster){
-        if(!withinBounds(i,j) || grid[i][j] == null) {return;}
+    private void clusterSearch(int i, int j, boolean[][] visited, Cluster cluster) {
+        if (!withinBounds(i, j) || grid[i][j] == null) {
+            return;
+        }
 
         Symbol type = grid[i][j];
         Coord coord = new Coord(i, j);
 
         //manually add blockers to the destroy list
-        if(type.isBlocker()){
+        if (type.isBlocker()) {
             cluster.toDestroy().add(coord);
             return;
         }
 
-        if((!visited[i][j] || type.isWildCard()) && cluster.addIfValid(type, coord)) {
+        if ((!visited[i][j] || type.isWildCard()) && cluster.addIfValid(type, coord)) {
             visited[i][j] = true;
 
-            clusterSearch(i-1, j, visited, cluster);
-            clusterSearch(i+1, j, visited, cluster);
-            clusterSearch(i, j-1, visited, cluster);
-            clusterSearch(i, j+1, visited, cluster);
+            clusterSearch(i - 1, j, visited, cluster);
+            clusterSearch(i + 1, j, visited, cluster);
+            clusterSearch(i, j - 1, visited, cluster);
+            clusterSearch(i, j + 1, visited, cluster);
         }
     }
 
     /**
      * Check if position is within grid bounds
+     *
      * @param i reel of the current position
      * @param j row of the current position
      * @return true if within the grid bounds
      */
-    private boolean withinBounds(int i, int j){
+    private boolean withinBounds(int i, int j) {
         return (i >= 0 && i < this.grid.length
                 && j >= 0 && j < this.grid[0].length);
     }
@@ -152,10 +157,11 @@ public class GameStep {
     /**
      * Adds new cluster to the GameStep found list if given
      * cluster is of valid size.
+     *
      * @param newCluster the cluster to be added
      */
-    private void processNewCluster(Cluster newCluster){
-        if(newCluster.getSize() >= this.minClusterSize){
+    private void processNewCluster(Cluster newCluster) {
+        if (newCluster.getSize() >= this.minClusterSize) {
             this.clusters.add(newCluster);
             LOGGER.debug("Found Cluster of {}, with size {}",
                     newCluster.getType(), newCluster.getSize());
@@ -166,15 +172,15 @@ public class GameStep {
      * Generates a clone of the grid where the clusters
      * previously found are destroyed
      */
-    private void destroyGrid(){
+    private void destroyGrid() {
         this.gridAfterDestroy = Utils.deepClone(this.grid);
 
         Set<Coord> toDestroy = new HashSet<>();
-        for(Cluster cluster : this.clusters){
+        for (Cluster cluster : this.clusters) {
             toDestroy.addAll(cluster.toDestroy());
         }
 
-        for(Coord coord : toDestroy){
+        for (Coord coord : toDestroy) {
             this.gridAfterDestroy[coord.reel()][coord.row()] = null;
         }
     }
@@ -183,16 +189,16 @@ public class GameStep {
      * Generates a clone of the grid where positions that don't have a bottom
      * neighbor that's not null will be moved down as if gravity was applied.
      */
-    private void applyGravity(){
+    private void applyGravity() {
         this.gridAfterGravity = Utils.deepClone(this.gridAfterDestroy);
         Symbol[] buffReel;
         int counter;
-        for(int i = 0; i < this.gridAfterGravity.length; i++){
+        for (int i = 0; i < this.gridAfterGravity.length; i++) {
             buffReel = new Symbol[this.gridAfterGravity.length];
-            counter = this.gridAfterGravity.length-1;
-            for(int j = this.gridAfterGravity.length-1; j >= 0; j--){
+            counter = this.gridAfterGravity.length - 1;
+            for (int j = this.gridAfterGravity.length - 1; j >= 0; j--) {
                 Symbol curr = this.gridAfterGravity[i][j];
-                if(curr != null){
+                if (curr != null) {
                     buffReel[counter] = curr;
                     counter--;
                     this.gridAfterGravity[i][j] = null;

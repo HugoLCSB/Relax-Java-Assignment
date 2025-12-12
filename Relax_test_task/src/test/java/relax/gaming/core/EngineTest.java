@@ -3,7 +3,6 @@ package relax.gaming.core;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import relax.gaming.config.ConfigManager;
-import relax.gaming.utils.SingletonExecutor;
 
 import java.io.IOException;
 import java.util.concurrent.CompletableFuture;
@@ -29,7 +28,7 @@ public class EngineTest {
     }
 
     @Test
-    public void SeededSpinTest(){
+    public void SeededSpinTest() {
         long seed = Long.parseLong("-6387813778980389556");
         GameRound round = this.engine.doSpin(seed, 10);
         assertEquals(3, round.steps().size());
@@ -44,7 +43,7 @@ public class EngineTest {
     }
 
     @Test
-    public void SeededGambleTest(){
+    public void SeededGambleTest() {
         long seed = Long.parseLong("-2846572335491250255");
         GameRound round = this.engine.doGamble(seed, 10);
         assertNull(round.steps());
@@ -52,11 +51,11 @@ public class EngineTest {
     }
 
     @Test
-    public void SimTestAsync(){
+    public void SimTestAsync() {
         int spins = 10000;
         int batchSize = 100;
-        CompletableFuture<SimulationResult> future = this.engine.doSimulationAsync(SingletonExecutor.SIMULATION_POOL, spins, batchSize);
-        assertDoesNotThrow(() ->{
+        CompletableFuture<SimulationResult> future = this.engine.doSimulationAsync(spins, batchSize);
+        assertDoesNotThrow(() -> {
             SimulationResult result = future.get();
             assertEquals(spins, result.spins());
             assertTrue(result.rtp() > 0.5);

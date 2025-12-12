@@ -12,12 +12,14 @@ public class Cluster {
     private double payout;
 
     public Cluster(Symbol type) {
-        if(type == null){
+        if (type == null) {
             throw new IllegalArgumentException("Cluster type must not be null");
         }
         this.type = type;
-        this.coords = new ArrayList<>(){};
-        this.toDestroy = new ArrayList<>(){};
+        this.coords = new ArrayList<>() {
+        };
+        this.toDestroy = new ArrayList<>() {
+        };
         this.payout = 0;
     }
 
@@ -25,7 +27,7 @@ public class Cluster {
         return this.type;
     }
 
-    public int getSize(){
+    public int getSize() {
         return this.coords.size();
     }
 
@@ -33,11 +35,11 @@ public class Cluster {
         return this.coords;
     }
 
-    public double getPayout(){
+    public double getPayout() {
         return this.payout;
     }
 
-    public List<Coord> toDestroy(){
+    public List<Coord> toDestroy() {
         return this.toDestroy;
     }
 
@@ -46,12 +48,12 @@ public class Cluster {
      * list to be destroyed if cluster doesn't already contain the given entry and if its
      * of same type as the cluster or wildcard.
      *
-     * @param type type of the given element to add
+     * @param type  type of the given element to add
      * @param coord coordinates of the element to add
      * @return true if added
      */
     public boolean addIfValid(Symbol type, Coord coord) {
-        if(!this.coords.contains(coord) && ((this.type.equals(type) || type.isWildCard()))) {
+        if (!this.coords.contains(coord) && ((this.type.equals(type) || type.isWildCard()))) {
             this.coords.add(coord);
             this.toDestroy.add(coord);
             return true;
@@ -59,7 +61,7 @@ public class Cluster {
         return false;
     }
 
-    public void setPayout(double payout){
+    public void setPayout(double payout) {
         this.payout = payout;
     }
 }

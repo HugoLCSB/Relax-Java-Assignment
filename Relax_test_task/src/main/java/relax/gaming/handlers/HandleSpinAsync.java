@@ -20,7 +20,7 @@ public class HandleSpinAsync implements HttpHandler {
     private final Engine engine;
 
     public HandleSpinAsync(Engine engine) {
-        if(engine == null){
+        if (engine == null) {
             throw new IllegalArgumentException("Engine can't be null");
         }
         this.engine = engine;
@@ -34,7 +34,7 @@ public class HandleSpinAsync implements HttpHandler {
                 String seedParam = params.get("seed") != null ? params.get("seed").getFirst() : null;
                 String betParam = params.get("bet") != null ? params.get("bet").getFirst() : null;
 
-                if(betParam == null){
+                if (betParam == null) {
                     LOGGER.warn("Missing required parameter bet");
                     Utils.sendHttpResponse(exchange, 400, "Missing required parameter bet");
                     return;
@@ -62,12 +62,12 @@ public class HandleSpinAsync implements HttpHandler {
                             Utils.sendHttpResponse(exchange, 500, "Internal error");
                             return null;
                         });
-            }catch(NumberFormatException e){
+            } catch (NumberFormatException e) {
                 LOGGER.error("Invalid parameter values", e);
                 Utils.sendHttpResponse(exchange, 400, "Invalid parameter values");
             } catch (Exception e) {
                 LOGGER.error("Spin request failed", e);
-                Utils.sendHttpResponse(exchange, 400, "Bad request");
+                Utils.sendHttpResponse(exchange, 500, "Bad request");
             }
         });
     }
