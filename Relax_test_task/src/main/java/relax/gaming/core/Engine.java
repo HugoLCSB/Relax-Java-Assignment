@@ -52,7 +52,9 @@ public class Engine {
         }
 
         Rnd rnd = new RndRegular(seed);
-        ThreadContext.put("seed", String.valueOf(rnd.getSeed()));
+        seed = rnd.getSeed();
+        ThreadContext.put("seed", String.valueOf(seed));
+
         int stepIndex = 0;
         List<GameStep> result = new ArrayList<>();
 
