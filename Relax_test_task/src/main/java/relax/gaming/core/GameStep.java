@@ -12,7 +12,8 @@ import java.util.Set;
 
 /**
  * This class represents a GameStep, which is a single step in a GameRound.
- * A GameStep is composed of one round of clusterSearch one round of destroying the found clusters
+ * A GameStep is composed of one round of clusterSearch one round of destroying
+ * the found clusters
  * and one round of applying gravity, to make up a single avalanche.
  */
 public class GameStep {
@@ -23,8 +24,9 @@ public class GameStep {
     private Symbol[][] gridAfterGravity;
     private final int minClusterSize;
     private double stepPayout;
+    private boolean shouldPrint;
 
-    public GameStep(Symbol[][] grid, int minClusterSize) {
+    public GameStep(Symbol[][] grid, int minClusterSize, boolean shouldPrint) {
         if (grid == null) {
             throw new IllegalArgumentException("Grid must not be null");
         }
@@ -32,6 +34,7 @@ public class GameStep {
         this.clusters = new ArrayList<>();
         this.minClusterSize = minClusterSize;
         this.stepPayout = 0;
+        this.shouldPrint = shouldPrint;
     }
 
     public Symbol[][] getGrid() {
@@ -67,13 +70,14 @@ public class GameStep {
      */
     public void compute() {
         try {
-            LOGGER.debug("Starting Grid: {}", Utils.formatGrid(this.grid));
+            logGridState("Starting Grid: {}", this.grid);
             findClusters();
             if (hasClusters()) {
                 destroyGrid();
-                LOGGER.debug("Grid after destroy: {}", Utils.formatGrid(this.gridAfterDestroy));
+                logGridState("Grid after destroy: {}", this.gridAfterDestroy);
+
                 applyGravity();
-                LOGGER.debug("Grid after gravity: {}", Utils.formatGrid(this.gridAfterGravity));
+                logGridState("Grid after gravity: {}", this.gridAfterGravity);
             }
         } catch (Exception e) {
             LOGGER.error("Error while game step computation", e);
@@ -81,10 +85,19 @@ public class GameStep {
         }
     }
 
+    private void logGridState(String msg, Symbol[][] grid) {
+        if (LOGGER.isDebugEnabled() && this.shouldPrint) {
+            LOGGER.debug(msg, Utils.formatGrid(grid));
+        }
+    }
+
     /**
-     * Finds clusters using a DFS approach where the 4 neighbors (up/down/left/right)
-     * are explored before backtracking, if same type found, recursively explore those
-     * neighbors and so on, until there are no same type neighbors or the grid is totally visited.
+     * Finds clusters using a DFS approach where the 4 neighbors
+     * (up/down/left/right)
+     * are explored before backtracking, if same type found, recursively explore
+     * those
+     * neighbors and so on, until there are no same type neighbors or the grid is
+     * totally visited.
      */
     private void findClusters() {
         boolean[][] visited = new boolean[this.grid.length][this.grid.length];
@@ -95,7 +108,7 @@ public class GameStep {
                     continue;
                 }
 
-                //blockers and wildcards don't form clusters
+                // blockers and wildcards don't form clusters
                 if (grid[i][j] == null
                         || this.grid[i][j].isBlocker()
                         || this.grid[i][j].isWildCard()) {
@@ -126,7 +139,7 @@ public class GameStep {
         Symbol type = grid[i][j];
         Coord coord = new Coord(i, j);
 
-        //manually add blockers to the destroy list
+        // manually add blockers to the destroy list
         if (type.isBlocker()) {
             cluster.toDestroy().add(coord);
             return;
@@ -163,8 +176,9 @@ public class GameStep {
     private void processNewCluster(Cluster newCluster) {
         if (newCluster.getSize() >= this.minClusterSize) {
             this.clusters.add(newCluster);
-            LOGGER.debug("Found Cluster of {}, with size {}",
-                    newCluster.getType(), newCluster.getSize());
+            if (shouldPrint)
+                LOGGER.debug("Found Cluster of {}, with size {}",
+                        newCluster.getType(), newCluster.getSize());
         }
     }
 

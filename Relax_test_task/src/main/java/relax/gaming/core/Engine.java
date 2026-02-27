@@ -16,7 +16,8 @@ import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
 /**
- * This class is the Game Engine,a heart of the back-end service responsible for the game rules and mechanics.
+ * This class is the Game Engine,a heart of the back-end service responsible for
+ * the game rules and mechanics.
  */
 public class Engine {
     private static final Logger LOGGER = LogManager.getLogger(Engine.class);
@@ -46,7 +47,7 @@ public class Engine {
      * @param bet  the given money bet
      * @return the Round information
      */
-    public GameRound doSpin(long seed, double bet) {
+    public GameRound doSpin(long seed, double bet, boolean shouldPrint) {
         if (bet <= 0) {
             throw new IllegalArgumentException("Bet amount must not be zero");
         }
@@ -63,18 +64,20 @@ public class Engine {
                 REEL_AMOUNT, ROW_AMOUNT,
                 this.symbolConfig.spinOptions(), this.symbolConfig.spinWeights());
         do {
-            LOGGER.debug("Starting gameStep: {}", stepIndex);
-            //start gameStep
-            currStep = new GameStep(currGrid, payoutConfig.getMinClusterSize());
+            if (shouldPrint) {
+                LOGGER.debug("Starting gameStep: {}", stepIndex);
+            }
+            // start gameStep
+            currStep = new GameStep(currGrid, payoutConfig.getMinClusterSize(), shouldPrint);
             currStep.compute();
             result.add(currStep);
 
-            //exit early when no clusters
+            // exit early when no clusters
             if (!currStep.hasClusters()) {
                 break;
             }
 
-            //set up the next gameStep
+            // set up the next gameStep
             stepIndex++;
             currGrid = GridGenerator.populateGrid(rnd,
                     currStep.getGridAfterGravity(),
@@ -82,7 +85,9 @@ public class Engine {
         } while (currStep.hasClusters());
 
         double totalPayout = calculatePayout(result, bet);
-        LOGGER.debug("Total round payout is {}", totalPayout);
+        if (shouldPrint) {
+            LOGGER.debug("Total round payout is {}", totalPayout);
+        }
         return new GameRound(seed, bet, result, totalPayout);
     }
 
@@ -98,8 +103,7 @@ public class Engine {
         for (GameStep step : steps) {
             double stepPayout = 0;
             for (Cluster cluster : step.getClusters()) {
-                double cPayout =
-                        this.payoutConfig.getPayout(cluster.getType().getName(), cluster.getSize(), bet);
+                double cPayout = this.payoutConfig.getPayout(cluster.getType().getName(), cluster.getSize(), bet);
                 cluster.setPayout(cPayout);
                 stepPayout += cPayout;
             }
@@ -142,7 +146,7 @@ public class Engine {
             CompletableFuture<Double> future = CompletableFuture.supplyAsync(() -> {
                 double batchTotal = 0;
                 for (int j = 0; j < batchSize; j++) {
-                    GameRound round = doSpin(0, 1); // 1 unit bet
+                    GameRound round = doSpin(0, 1, false); // 1 unit bet
                     batchTotal += round.totalPayout();
                 }
                 return batchTotal;

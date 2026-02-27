@@ -10,7 +10,7 @@ import java.util.concurrent.CompletableFuture;
 import static org.junit.jupiter.api.Assertions.*;
 
 public class EngineTest {
-    //TODO: should not depend on the config files for unit tests
+    // TODO: should not depend on the config files for unit tests
     private static final String SYMBOL_FILE = "symbols.json";
     private static final String PAYOUT_FILE = "payouts.json";
     private static final String BUCKET_FILE = "clusterBuckets.json";
@@ -30,7 +30,7 @@ public class EngineTest {
     @Test
     public void SeededSpinTest() {
         long seed = Long.parseLong("-6387813778980389556");
-        GameRound round = this.engine.doSpin(seed, 10);
+        GameRound round = this.engine.doSpin(seed, 10, false);
         assertEquals(3, round.steps().size());
 
         assertEquals(8, round.steps().get(0).getClusters().get(0).getSize());

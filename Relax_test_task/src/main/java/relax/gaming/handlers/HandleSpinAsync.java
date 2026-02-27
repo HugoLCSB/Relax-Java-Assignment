@@ -44,13 +44,13 @@ public class HandleSpinAsync implements HttpHandler {
                 double bet = Double.parseDouble(betParam);
 
                 LOGGER.info("Received spin request");
-                CompletableFuture.supplyAsync(() -> this.engine.doSpin(seed, bet), SingletonExecutor.REGULAR_REQUEST_POOL)
+                CompletableFuture
+                        .supplyAsync(() -> this.engine.doSpin(seed, bet, true), SingletonExecutor.REGULAR_REQUEST_POOL)
                         .thenAccept(result -> {
                             try {
                                 String json = Json.toJson(result);
                                 exchange.getResponseHeaders().put(
-                                        Headers.CONTENT_TYPE, "application/json"
-                                );
+                                        Headers.CONTENT_TYPE, "application/json");
                                 exchange.getResponseSender().send(json);
                                 LOGGER.info("Spin completed.");
                             } finally {

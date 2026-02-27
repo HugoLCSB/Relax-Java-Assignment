@@ -10,7 +10,7 @@ public class GameStepTest {
     private static final int MIN_CLUSTER_SIZE = 5;
 
     @Test
-    public void TestSingleClusterDetection(){
+    public void TestSingleClusterDetection() {
         Symbol[][] grid = new Symbol[Engine.REEL_AMOUNT][Engine.ROW_AMOUNT];
         Symbol testSymbol = new Symbol("H1", 0, 0, false, false);
         grid[0][0] = testSymbol;
@@ -19,15 +19,15 @@ public class GameStepTest {
         grid[0][3] = testSymbol;
         grid[0][4] = testSymbol;
 
-        GameStep step = new GameStep(grid, MIN_CLUSTER_SIZE);
+        GameStep step = new GameStep(grid, MIN_CLUSTER_SIZE, false);
         step.compute();
         assertEquals(1, step.getClusters().size());
         assertEquals(5, step.getClusters().get(0).getSize());
-        //assertEquals(5.0, step.getStepPayout());
+        // assertEquals(5.0, step.getStepPayout());
     }
 
     @Test
-    public void TestDestroySingleCluster(){
+    public void TestDestroySingleCluster() {
         Symbol[][] grid = new Symbol[Engine.REEL_AMOUNT][Engine.ROW_AMOUNT];
         Symbol testSymbol = new Symbol("H1", 0, 0, false, false);
         grid[0][0] = testSymbol;
@@ -36,7 +36,7 @@ public class GameStepTest {
         grid[0][3] = testSymbol;
         grid[0][4] = testSymbol;
 
-        GameStep step = new GameStep(grid, MIN_CLUSTER_SIZE);
+        GameStep step = new GameStep(grid, MIN_CLUSTER_SIZE, false);
         step.compute();
         assertNull(step.getGridAfterDestroy()[0][0]);
         assertNull(step.getGridAfterDestroy()[0][1]);
@@ -46,7 +46,7 @@ public class GameStepTest {
     }
 
     @Test
-    public void TestGravitySingleCluster(){
+    public void TestGravitySingleCluster() {
         Symbol[][] grid = new Symbol[Engine.REEL_AMOUNT][Engine.ROW_AMOUNT];
         Symbol testSymbolDiff = new Symbol("L8", 0, 0, false, false);
         Symbol testSymbol = new Symbol("H1", 0, 0, false, false);
@@ -59,29 +59,29 @@ public class GameStepTest {
         grid[0][4] = testSymbol;
         grid[0][5] = testSymbol;
 
-        GameStep step = new GameStep(grid, MIN_CLUSTER_SIZE);
+        GameStep step = new GameStep(grid, MIN_CLUSTER_SIZE, false);
         step.compute();
         assertEquals(testSymbolDiff, step.getGridAfterGravity()[0][7]);
     }
 
     @Test
-    public void TestFullClusterDetection(){
+    public void TestFullClusterDetection() {
         Symbol[][] grid = new Symbol[Engine.REEL_AMOUNT][Engine.ROW_AMOUNT];
         Symbol testSymbol = new Symbol("H1", 0, 0, false, false);
-        for(int i = 0; i < grid.length; i++){
-            for(int j = 0; j < grid[0].length; j++){
+        for (int i = 0; i < grid.length; i++) {
+            for (int j = 0; j < grid[0].length; j++) {
                 grid[i][j] = testSymbol;
             }
         }
 
-        GameStep step = new GameStep(grid, MIN_CLUSTER_SIZE);
+        GameStep step = new GameStep(grid, MIN_CLUSTER_SIZE, false);
         step.compute();
         assertEquals(1, step.getClusters().size());
         assertEquals(64, step.getClusters().get(0).getSize());
     }
 
     @Test
-    public void TestDestroyIgnoredNeighbors(){
+    public void TestDestroyIgnoredNeighbors() {
         Symbol[][] grid = new Symbol[Engine.REEL_AMOUNT][Engine.ROW_AMOUNT];
         Symbol testSymbol = new Symbol("H1", 0, 0, false, false);
         Symbol testBlocker = new Symbol("BL", 0, 0, false, true);
@@ -95,7 +95,7 @@ public class GameStepTest {
         grid[0][5] = testBlocker;
         grid[0][6] = testBlocker;
 
-        GameStep step = new GameStep(grid, MIN_CLUSTER_SIZE);
+        GameStep step = new GameStep(grid, MIN_CLUSTER_SIZE, false);
         step.compute();
 
         assertNull(step.getGridAfterDestroy()[0][5]);
@@ -103,7 +103,7 @@ public class GameStepTest {
     }
 
     @Test
-    public void TestWildCards(){
+    public void TestWildCards() {
         Symbol[][] grid = new Symbol[Engine.REEL_AMOUNT][Engine.ROW_AMOUNT];
         Symbol testSymbol = new Symbol("H1", 0, 0, false, false);
         Symbol testSymbol2 = new Symbol("H2", 0, 0, false, false);
@@ -121,17 +121,17 @@ public class GameStepTest {
         grid[3][4] = testSymbol2;
         grid[4][4] = testSymbol2;
 
-        GameStep step = new GameStep(grid, MIN_CLUSTER_SIZE);
+        GameStep step = new GameStep(grid, MIN_CLUSTER_SIZE, false);
         step.compute();
 
         assertEquals(2, step.getClusters().size());
-        for(Cluster cluster : step.getClusters()){
+        for (Cluster cluster : step.getClusters()) {
             assertEquals(5, cluster.getSize());
         }
     }
 
     @Test
-    public void TestSingleClusterGrid(){
+    public void TestSingleClusterGrid() {
         Symbol[][] grid = new Symbol[Engine.REEL_AMOUNT][Engine.ROW_AMOUNT];
         Symbol testSymbol = new Symbol("H1", 0, 0, false, false);
         grid[0][0] = testSymbol;
@@ -140,7 +140,7 @@ public class GameStepTest {
         grid[0][3] = testSymbol;
         grid[0][4] = testSymbol;
 
-        GameStep step = new GameStep(grid, MIN_CLUSTER_SIZE);
+        GameStep step = new GameStep(grid, MIN_CLUSTER_SIZE, false);
         step.compute();
         assertEquals(Utils.formatGrid(grid), Utils.formatGrid(step.getGrid()));
     }
