@@ -1,14 +1,14 @@
 package relax.gaming.core;
 
 import relax.gaming.config.Symbol;
-import relax.gaming.utils.Utils;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class Cluster {
     private final Symbol type;
-    private final Symbol[][] coords;
+    private final Symbol[] coords;
+    private final int gridRowsSize;
     private int clusterSize;
     private final List<Coord> toDestroy;
     private double payout;
@@ -18,7 +18,8 @@ public class Cluster {
             throw new IllegalArgumentException("Cluster type must not be null");
         }
         this.type = type;
-        this.coords = new Symbol[reels][rows];
+        this.gridRowsSize = rows;
+        this.coords = new Symbol[reels * rows];
         this.toDestroy = new ArrayList<>();
         this.payout = 0;
     }
@@ -29,10 +30,6 @@ public class Cluster {
 
     public int getSize() {
         return this.clusterSize;
-    }
-
-    public List<Coord> getCoords() {
-        return Utils.gridToList(this.coords);
     }
 
     public double getPayout() {
@@ -59,9 +56,10 @@ public class Cluster {
      * @return true if added
      */
     public boolean addIfValid(Symbol type, Coord coord) {
-        if ((this.coords[coord.reel()][coord.row()] == null) && ((this.type.equals(type) || type.isWildCard()))) {
+        int index = (coord.reel() * this.gridRowsSize) + coord.row();
+        if ((this.coords[index] == null) && ((this.type.equals(type) || type.isWildCard()))) {
             this.clusterSize++;
-            this.coords[coord.reel()][coord.row()] = type;
+            this.coords[index] = type;
             this.toDestroy.add(coord);
             return true;
         }

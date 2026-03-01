@@ -1,10 +1,6 @@
 package relax.gaming.utils;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import io.undertow.server.HttpServerExchange;
-import relax.gaming.core.Coord;
 
 /**
  * This is the Utils class.
@@ -57,26 +53,5 @@ public class Utils {
     public static void sendHttpResponse(HttpServerExchange exchange, int code, String message) {
         exchange.setStatusCode(code);
         exchange.getResponseSender().send(message);
-    }
-
-    /**
-     * Transforms a 2d grid in a coord list where
-     * every non null position is added as a coord to the list
-     * 
-     * @param <T>  the grid type
-     * @param grid the given 2d grid
-     * @return the coord list
-     */
-    public static <T> List<Coord> gridToList(T[][] grid) {
-        List<Coord> res = new ArrayList<>();
-        for (int j = 0; j < grid[0].length; j++) {
-            for (int i = 0; i < grid.length; i++) {
-                if (grid[i][j] != null) {
-                    res.add(new Coord(i, j));
-                }
-            }
-        }
-
-        return res;
     }
 }
