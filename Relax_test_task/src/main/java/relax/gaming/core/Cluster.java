@@ -7,7 +7,7 @@ import java.util.List;
 
 public class Cluster {
     private final Symbol type;
-    private final Symbol[] coords;
+    private long coords;
     private final int gridRowsSize;
     private int clusterSize;
     private final List<Coord> toDestroy;
@@ -19,7 +19,7 @@ public class Cluster {
         }
         this.type = type;
         this.gridRowsSize = rows;
-        this.coords = new Symbol[reels * rows];
+        this.coords = 0L;
         this.toDestroy = new ArrayList<>();
         this.payout = 0;
     }
@@ -57,9 +57,13 @@ public class Cluster {
      */
     public boolean addIfValid(Symbol type, Coord coord) {
         int index = (coord.reel() * this.gridRowsSize) + coord.row();
-        if ((this.coords[index] == null) && ((this.type.equals(type) || type.isWildCard()))) {
+
+        long mask = 1L << index;
+        boolean contains = (this.coords & mask) != 0L;
+
+        if (!contains && ((this.type.equals(type) || type.isWildCard()))) {
             this.clusterSize++;
-            this.coords[index] = type;
+            this.coords |= mask;
             this.toDestroy.add(coord);
             return true;
         }
