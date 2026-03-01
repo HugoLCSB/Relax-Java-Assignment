@@ -1,25 +1,25 @@
 package relax.gaming.core;
 
 import relax.gaming.config.Symbol;
+import relax.gaming.utils.Utils;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class Cluster {
     private final Symbol type;
-    private final List<Coord> coords;
+    private final Symbol[][] coords;
+    private int clusterSize;
     private final List<Coord> toDestroy;
     private double payout;
 
-    public Cluster(Symbol type) {
+    public Cluster(Symbol type, int reels, int rows) {
         if (type == null) {
             throw new IllegalArgumentException("Cluster type must not be null");
         }
         this.type = type;
-        this.coords = new ArrayList<>() {
-        };
-        this.toDestroy = new ArrayList<>() {
-        };
+        this.coords = new Symbol[reels][rows];
+        this.toDestroy = new ArrayList<>();
         this.payout = 0;
     }
 
@@ -28,15 +28,19 @@ public class Cluster {
     }
 
     public int getSize() {
-        return this.coords.size();
+        return this.clusterSize;
     }
 
     public List<Coord> getCoords() {
-        return this.coords;
+        return Utils.gridToList(this.coords);
     }
 
     public double getPayout() {
         return this.payout;
+    }
+
+    public void addToDestroy(Coord coord) {
+        this.toDestroy.add(coord);
     }
 
     public List<Coord> toDestroy() {
@@ -44,8 +48,10 @@ public class Cluster {
     }
 
     /**
-     * Adds the given element to the list of Coordinates of this cluster and also to the
-     * list to be destroyed if cluster doesn't already contain the given entry and if its
+     * Adds the given element to the list of Coordinates of this cluster and also to
+     * the
+     * list to be destroyed if cluster doesn't already contain the given entry and
+     * if its
      * of same type as the cluster or wildcard.
      *
      * @param type  type of the given element to add
@@ -53,8 +59,9 @@ public class Cluster {
      * @return true if added
      */
     public boolean addIfValid(Symbol type, Coord coord) {
-        if (!this.coords.contains(coord) && ((this.type.equals(type) || type.isWildCard()))) {
-            this.coords.add(coord);
+        if ((this.coords[coord.reel()][coord.row()] == null) && ((this.type.equals(type) || type.isWildCard()))) {
+            this.clusterSize++;
+            this.coords[coord.reel()][coord.row()] = type;
             this.toDestroy.add(coord);
             return true;
         }

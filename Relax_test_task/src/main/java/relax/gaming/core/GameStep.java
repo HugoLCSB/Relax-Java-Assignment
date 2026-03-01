@@ -116,7 +116,7 @@ public class GameStep {
                     continue;
                 }
 
-                Cluster newCluster = new Cluster(this.grid[i][j]);
+                Cluster newCluster = new Cluster(this.grid[i][j], this.grid.length, this.grid[0].length);
                 clusterSearch(i, j, visited, newCluster);
                 processNewCluster(newCluster);
             }
@@ -141,7 +141,7 @@ public class GameStep {
 
         // manually add blockers to the destroy list
         if (type.isBlocker()) {
-            cluster.toDestroy().add(coord);
+            cluster.addToDestroy(coord);
             return;
         }
 
