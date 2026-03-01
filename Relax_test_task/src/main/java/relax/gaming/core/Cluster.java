@@ -1,16 +1,13 @@
 package relax.gaming.core;
 
 import relax.gaming.config.Symbol;
-
-import java.util.ArrayList;
-import java.util.List;
+import relax.gaming.utils.Utils;
 
 public class Cluster {
     private final Symbol type;
     private long coords;
     private final int gridRowsSize;
     private int clusterSize;
-    private final List<Coord> toDestroy;
     private double payout;
 
     public Cluster(Symbol type, int reels, int rows) {
@@ -20,7 +17,6 @@ public class Cluster {
         this.type = type;
         this.gridRowsSize = rows;
         this.coords = 0L;
-        this.toDestroy = new ArrayList<>();
         this.payout = 0;
     }
 
@@ -36,12 +32,20 @@ public class Cluster {
         return this.payout;
     }
 
-    public void addToDestroy(Coord coord) {
-        this.toDestroy.add(coord);
+    /**
+     * Some pieces might need to be manually added to cluster for destruction
+     * purposes
+     * and thus shouldnt be counted for the total cluster size
+     * 
+     * @param coord
+     */
+    public void addToDestroy(int reel, int row) {
+        int index = (reel * this.gridRowsSize) + row;
+        this.coords = Utils.bitwiseAdd(this.coords, index);
     }
 
-    public List<Coord> toDestroy() {
-        return this.toDestroy;
+    public long toDestroy() {
+        return this.coords;
     }
 
     /**
@@ -55,8 +59,8 @@ public class Cluster {
      * @param coord coordinates of the element to add
      * @return true if added
      */
-    public boolean addIfValid(Symbol type, Coord coord) {
-        int index = (coord.reel() * this.gridRowsSize) + coord.row();
+    public boolean addIfValid(Symbol type, int reel, int row) {
+        int index = (reel * this.gridRowsSize) + row;
 
         long mask = 1L << index;
         boolean contains = (this.coords & mask) != 0L;
@@ -64,7 +68,6 @@ public class Cluster {
         if (!contains && ((this.type.equals(type) || type.isWildCard()))) {
             this.clusterSize++;
             this.coords |= mask;
-            this.toDestroy.add(coord);
             return true;
         }
         return false;

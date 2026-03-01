@@ -6,9 +6,7 @@ import relax.gaming.config.Symbol;
 import relax.gaming.utils.Utils;
 
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 /**
  * This class represents a GameStep, which is a single step in a GameRound.
@@ -137,15 +135,14 @@ public class GameStep {
         }
 
         Symbol type = grid[i][j];
-        Coord coord = new Coord(i, j);
 
         // manually add blockers to the destroy list
         if (type.isBlocker()) {
-            cluster.addToDestroy(coord);
+            cluster.addToDestroy(i, j);
             return;
         }
 
-        if ((!visited[i][j] || type.isWildCard()) && cluster.addIfValid(type, coord)) {
+        if ((!visited[i][j] || type.isWildCard()) && cluster.addIfValid(type, i, j)) {
             visited[i][j] = true;
 
             clusterSearch(i - 1, j, visited, cluster);
@@ -189,13 +186,27 @@ public class GameStep {
     private void destroyGrid() {
         this.gridAfterDestroy = Utils.deepClone(this.grid);
 
-        Set<Coord> toDestroy = new HashSet<>();
+        long allToDestroy = 0L;
         for (Cluster cluster : this.clusters) {
-            toDestroy.addAll(cluster.toDestroy());
+            // merging the longs is done with a simple bitwise OR
+            allToDestroy |= cluster.toDestroy();
         }
 
-        for (Coord coord : toDestroy) {
-            this.gridAfterDestroy[coord.reel()][coord.row()] = null;
+        // Loop exactly as many times as there are 1s in the bitboard
+        while (allToDestroy != 0L) {
+
+            // Find the position of the the first '1' from the right
+            int index = Long.numberOfTrailingZeros(allToDestroy);
+
+            // Convert the flat index back to 2D coords
+            // Assuming original math was: index = (reel * TOTAL_ROWS) + row
+            int reel = index / this.grid[0].length;
+            int row = index % this.grid[0].length;
+
+            this.gridAfterDestroy[reel][row] = null;
+
+            // Clear that lowest set bit so the loop can move to the next one
+            allToDestroy &= (allToDestroy - 1L);
         }
     }
 

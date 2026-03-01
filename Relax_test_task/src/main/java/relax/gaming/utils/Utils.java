@@ -54,4 +54,28 @@ public class Utils {
         exchange.setStatusCode(code);
         exchange.getResponseSender().send(message);
     }
+
+    /**
+     * Check that a long (index) contains a specific given bit value
+     * 
+     * @param l     the long
+     * @param value the given value
+     * @return if contains the given bit
+     */
+    public static boolean bitwiseContains(long l, int value) {
+        long mask = 1L << value; // the mask specifies the bit we want
+        return (l & mask) != 0L; // long AND mask, returns zero if not contained
+    }
+
+    /**
+     * Add a specific bit to a long (index)
+     * 
+     * @param l     the long
+     * @param value the given value
+     * @return the long with the new bit
+     */
+    public static long bitwiseAdd(long l, int value) {
+        long mask = 1L << value; // the mask specifies the bit we want
+        return l |= mask;
+    }
 }

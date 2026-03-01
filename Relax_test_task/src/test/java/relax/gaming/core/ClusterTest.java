@@ -12,7 +12,7 @@ class ClusterTest {
         Symbol testWR = new Symbol("WR", 0, 0, true, false);
 
         Cluster cluster = new Cluster(testSymbol, Engine.REEL_AMOUNT, Engine.ROW_AMOUNT);
-        assertTrue(cluster.addIfValid(testWR, new Coord(0, 0)));
+        assertTrue(cluster.addIfValid(testWR, 0, 0));
         assertEquals(1, cluster.getSize());
     }
 
@@ -22,7 +22,7 @@ class ClusterTest {
         Symbol testBL = new Symbol("BL", 0, 0, false, true);
 
         Cluster cluster = new Cluster(testSymbol, Engine.REEL_AMOUNT, Engine.ROW_AMOUNT);
-        assertFalse(cluster.addIfValid(testBL, new Coord(0, 0)));
+        assertFalse(cluster.addIfValid(testBL, 0, 0));
         assertEquals(0, cluster.getSize());
     }
 
@@ -32,7 +32,7 @@ class ClusterTest {
         Symbol testSymbol2 = new Symbol("H2", 0, 0, false, false);
 
         Cluster cluster = new Cluster(testSymbol, Engine.REEL_AMOUNT, Engine.ROW_AMOUNT);
-        assertFalse(cluster.addIfValid(testSymbol2, new Coord(0, 0)));
+        assertFalse(cluster.addIfValid(testSymbol2, 0, 0));
         assertEquals(0, cluster.getSize());
     }
 
@@ -41,7 +41,7 @@ class ClusterTest {
         Symbol testSymbol = new Symbol("H1", 0, 0, false, false);
 
         Cluster cluster = new Cluster(testSymbol, Engine.REEL_AMOUNT, Engine.ROW_AMOUNT);
-        assertTrue(cluster.addIfValid(testSymbol, new Coord(0, 0)));
+        assertTrue(cluster.addIfValid(testSymbol, 0, 0));
         assertEquals(1, cluster.getSize());
         // assertEquals(0, cluster.getCoords().get(0).reel());
         // assertEquals(0, cluster.getCoords().get(0).row());
@@ -52,8 +52,8 @@ class ClusterTest {
         Symbol testSymbol = new Symbol("H1", 0, 0, false, false);
 
         Cluster cluster = new Cluster(testSymbol, Engine.REEL_AMOUNT, Engine.ROW_AMOUNT);
-        cluster.addIfValid(testSymbol, new Coord(0, 0));
-        assertFalse(cluster.addIfValid(testSymbol, new Coord(0, 0)));
+        cluster.addIfValid(testSymbol, 0, 0);
+        assertFalse(cluster.addIfValid(testSymbol, 0, 0));
         assertEquals(1, cluster.getSize());
     }
 }
